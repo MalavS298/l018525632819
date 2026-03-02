@@ -1,4 +1,4 @@
-import { Clock, Heart, Users, Inbox, ArrowRight, Newspaper, BarChart3, ShieldOff, ShieldCheck } from "lucide-react";
+import { Clock, Heart, Users, Inbox, ArrowRight, Newspaper, BarChart3, ShieldOff, ShieldCheck, RefreshCw } from "lucide-react";
 
 type TabType = "submit" | "pending" | "all" | "users" | "newsletters" | "statistics" | "inbox";
 
@@ -8,9 +8,11 @@ interface QuickActionsProps {
   onSubmitHours: () => void;
   acceptingResponses?: boolean;
   onToggleAcceptingResponses?: () => void;
+  onSyncToExternal?: () => void;
+  syncing?: boolean;
 }
 
-const QuickActions = ({ isAdmin, setActiveTab, onSubmitHours, acceptingResponses = true, onToggleAcceptingResponses }: QuickActionsProps) => {
+const QuickActions = ({ isAdmin, setActiveTab, onSubmitHours, acceptingResponses = true, onToggleAcceptingResponses, onSyncToExternal, syncing }: QuickActionsProps) => {
   const userActions = [
     { label: "Submit Hours", icon: Clock, color: "text-blue-600", action: onSubmitHours },
   ];
@@ -25,6 +27,12 @@ const QuickActions = ({ isAdmin, setActiveTab, onSubmitHours, acceptingResponses
       icon: acceptingResponses ? ShieldOff : ShieldCheck,
       color: acceptingResponses ? "text-red-600" : "text-green-600",
       action: onToggleAcceptingResponses || (() => {}),
+    },
+    {
+      label: syncing ? "Syncing..." : "Sync to External DB",
+      icon: RefreshCw,
+      color: "text-cyan-600",
+      action: onSyncToExternal || (() => {}),
     },
   ];
 

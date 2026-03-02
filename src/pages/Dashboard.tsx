@@ -409,6 +409,7 @@ const Dashboard = () => {
 
   // Statistics search state
   const [statisticsSearch, setStatisticsSearch] = useState("");
+  const [syncing, setSyncing] = useState(false);
 
 
   const [messages, setMessages] = useState<{id: string; user_id: string; subject: string; description: string; created_at: string; read: boolean; user_name?: string; user_email?: string}[]>([]);
@@ -1178,6 +1179,32 @@ const Dashboard = () => {
                   }
                   setAcceptingResponses(newValue);
                   toast(newValue ? "Now accepting responses" : "Stopped accepting responses");
+                }}
+                syncing={syncing}
+                onSyncToExternal={async () => {
+                  setSyncing(true);
+                  try {
+                    const { data, error } = await supabase.functions.invoke("sync-to-external");
+                    if (error) throw error;
+                    if (data?.success) {
+                      const results = data.results;
+                      const totalSynced = Object.values(results).reduce((sum: number, r: any) => sum + r.synced, 0);
+                      const errors = Object.entries(results).filter(([_, r]: any) => r.error);
+                      if (errors.length > 0) {
+                        toast.warning(`Synced ${totalSynced} rows. ${errors.length} table(s) had errors.`);
+                        console.log("Sync errors:", errors);
+                      } else {
+                        toast.success(`Successfully synced ${totalSynced} rows to external database!`);
+                      }
+                    } else {
+                      toast.error(data?.error || "Sync failed");
+                    }
+                  } catch (error: any) {
+                    console.error("Sync error:", error);
+                    toast.error("Failed to sync: " + (error.message || "Unknown error"));
+                  } finally {
+                    setSyncing(false);
+                  }
                 }}
               />
 
