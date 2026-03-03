@@ -18,10 +18,6 @@ const QuickActions = ({ isAdmin, setActiveTab, onSubmitHours, acceptingResponses
   ];
 
   const adminActions = [
-    { label: "Manage Members", icon: Users, color: "text-purple-600", action: () => setActiveTab("users") },
-    { label: "Hours Inbox", icon: Inbox, color: "text-emerald-600", action: () => setActiveTab("pending") },
-    { label: "View Statistics", icon: BarChart3, color: "text-amber-600", action: () => setActiveTab("statistics") },
-    { label: "Newsletters", icon: Newspaper, color: "text-pink-600", action: () => setActiveTab("newsletters") },
     {
       label: acceptingResponses ? "Stop Accepting Responses" : "Start Accepting Responses",
       icon: acceptingResponses ? ShieldOff : ShieldCheck,
