@@ -994,6 +994,7 @@ const Dashboard = () => {
       setHours("");
       setServiceDate(new Date());
       setServiceType("synchronous");
+      setPrimaryApprover("");
       setImage(null);
       setImagePreview(null);
       setShowSubmitForm(false);
