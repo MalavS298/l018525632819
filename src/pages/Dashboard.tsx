@@ -209,6 +209,15 @@ const AddHoursForm = ({ users, onSuccess }: { users: UserProfile[], onSuccess: (
         </div>
 
         <div className="space-y-2">
+          <Label>Primary Approver</Label>
+          <Input
+            placeholder="Enter primary approver name"
+            value={primaryApprover}
+            onChange={(e) => setPrimaryApprover(e.target.value)}
+          />
+        </div>
+
+        <div className="space-y-2">
           <Label>Description (Optional)</Label>
           <Textarea
             placeholder="Enter description"
