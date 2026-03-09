@@ -68,6 +68,7 @@ const AddHoursForm = ({ users, onSuccess }: { users: UserProfile[], onSuccess: (
   const [userSearchOpen, setUserSearchOpen] = useState(false);
   const [hours, setHours] = useState("");
   const [serviceType, setServiceType] = useState<"synchronous" | "asynchronous">("synchronous");
+  const [primaryApprover, setPrimaryApprover] = useState("");
   const [description, setDescription] = useState("");
   const [serviceDate, setServiceDate] = useState<Date>(new Date());
   const [submitting, setSubmitting] = useState(false);
