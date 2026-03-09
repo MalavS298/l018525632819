@@ -1302,6 +1302,16 @@ const Dashboard = () => {
                     </div>
 
                     <div className="space-y-2">
+                      <Label htmlFor="primaryApprover">Primary Approver</Label>
+                      <Input
+                        id="primaryApprover"
+                        placeholder="Enter primary approver name"
+                        value={primaryApprover}
+                        onChange={(e) => setPrimaryApprover(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
                       <Label htmlFor="description">Description</Label>
                       <Textarea
                         id="description"
