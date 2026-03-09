@@ -50,6 +50,7 @@ interface Submission {
   submitted_at: string;
   service_date: string;
   service_type: string;
+  primary_approver?: string | null;
   status: string;
   user_name?: string | null;
   user_email?: string | null;
