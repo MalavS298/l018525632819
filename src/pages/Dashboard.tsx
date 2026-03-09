@@ -409,6 +409,7 @@ const Dashboard = () => {
   const [hours, setHours] = useState("");
   const [serviceDate, setServiceDate] = useState<Date>(new Date());
   const [serviceType, setServiceType] = useState<"synchronous" | "asynchronous">("synchronous");
+  const [primaryApprover, setPrimaryApprover] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
