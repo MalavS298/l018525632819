@@ -982,6 +982,7 @@ const Dashboard = () => {
         image_url: imageUrl,
         service_date: format(serviceDate, "yyyy-MM-dd"),
         service_type: serviceType,
+        primary_approver: primaryApprover || null,
         status: "pending",
       });
 
