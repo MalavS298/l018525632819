@@ -88,6 +88,7 @@ const AddHoursForm = ({ users, onSuccess }: { users: UserProfile[], onSuccess: (
         hours: parseFloat(hours) || 0,
         service_date: format(serviceDate, "yyyy-MM-dd"),
         service_type: serviceType,
+        primary_approver: primaryApprover || null,
         status: "approved",
         approved_at: new Date().toISOString(),
       });
