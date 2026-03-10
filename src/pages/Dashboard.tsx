@@ -670,6 +670,7 @@ const Dashboard = () => {
       console.error("Error sending reply:", error);
       toast.error("Failed to send reply");
     }
+  };
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
