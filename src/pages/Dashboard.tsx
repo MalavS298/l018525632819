@@ -629,6 +629,47 @@ const Dashboard = () => {
     }
   };
 
+  const fetchReplies = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("message_replies")
+        .select("*")
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+
+      const repliesMap: Record<string, typeof data> = {};
+      (data || []).forEach((r) => {
+        if (!repliesMap[r.message_id]) repliesMap[r.message_id] = [];
+        repliesMap[r.message_id].push(r);
+      });
+      setMessageReplies(repliesMap);
+    } catch (error) {
+      console.error("Error fetching replies:", error);
+    }
+  };
+
+  const handleSendReply = async (messageId: string) => {
+    if (!user || !replyText.trim()) return;
+    try {
+      const { error } = await supabase.from("message_replies").insert({
+        message_id: messageId,
+        user_id: user.id,
+        reply_text: replyText.trim(),
+      });
+      if (error) throw error;
+      toast.success("Reply sent!");
+      setReplyText("");
+      setReplyingTo(null);
+      fetchReplies();
+      if (isAdmin) {
+        handleMarkMessageRead(messageId);
+      }
+    } catch (error) {
+      console.error("Error sending reply:", error);
+      toast.error("Failed to send reply");
+    }
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
