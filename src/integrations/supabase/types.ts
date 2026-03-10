@@ -100,6 +100,38 @@ export type Database = {
         }
         Relationships: []
       }
+      message_replies: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: string
+          reply_text: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id: string
+          reply_text: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string
+          reply_text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_replies_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           created_at: string
