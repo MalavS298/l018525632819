@@ -432,6 +432,9 @@ const Dashboard = () => {
   const [messageDescription, setMessageDescription] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
   const [messageReason, setMessageReason] = useState("");
+  const [messageReplies, setMessageReplies] = useState<Record<string, {id: string; reply_text: string; created_at: string; user_id: string}[]>>({});
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
   const [acceptingResponses, setAcceptingResponses] = useState(true);
 
   // Meetings state
