@@ -1855,52 +1855,54 @@ const Dashboard = () => {
 
           {activeTab === "inbox" && (
             <div className="space-y-6">
-              {/* Send Message Form (for all users) */}
-              <div className="bg-card rounded-xl p-6 border border-border">
-                <h2 className="text-lg font-semibold text-foreground mb-4">Send Message to Admins</h2>
-                <form onSubmit={handleSendMessage} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="messageReason">Reason</Label>
-                    <Select value={messageReason} onValueChange={setMessageReason} required>
-                      <SelectTrigger className="bg-background">
-                        <SelectValue placeholder="Select a reason" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-background z-50">
-                        <SelectItem value="Event Proposal">Event Proposal</SelectItem>
-                        <SelectItem value="Suggestion">Suggestion</SelectItem>
-                        <SelectItem value="Concern">Concern</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="messageSubject">Subject</Label>
-                    <Input
-                      id="messageSubject"
-                      placeholder="Message subject"
-                      value={messageSubject}
-                      onChange={(e) => setMessageSubject(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="messageDescription">Description</Label>
-                    <Textarea
-                      id="messageDescription"
-                      placeholder="Write your message here..."
-                      value={messageDescription}
-                      onChange={(e) => setMessageDescription(e.target.value)}
-                      rows={4}
-                      required
-                    />
-                  </div>
-                  <Button type="submit" className="w-full gap-2" disabled={sendingMessage}>
-                    <Send className="w-4 h-4" />
-                    {sendingMessage ? "Sending..." : "Send Message"}
-                  </Button>
-                </form>
-              </div>
+              {/* Send Message Form (for regular users only) */}
+              {!isAdmin && (
+                <div className="bg-card rounded-xl p-6 border border-border">
+                  <h2 className="text-lg font-semibold text-foreground mb-4">Send Message to Admins</h2>
+                  <form onSubmit={handleSendMessage} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="messageReason">Reason</Label>
+                      <Select value={messageReason} onValueChange={setMessageReason} required>
+                        <SelectTrigger className="bg-background">
+                          <SelectValue placeholder="Select a reason" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-background z-50">
+                          <SelectItem value="Event Proposal">Event Proposal</SelectItem>
+                          <SelectItem value="Suggestion">Suggestion</SelectItem>
+                          <SelectItem value="Concern">Concern</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="messageSubject">Subject</Label>
+                      <Input
+                        id="messageSubject"
+                        placeholder="Message subject"
+                        value={messageSubject}
+                        onChange={(e) => setMessageSubject(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="messageDescription">Description</Label>
+                      <Textarea
+                        id="messageDescription"
+                        placeholder="Write your message here..."
+                        value={messageDescription}
+                        onChange={(e) => setMessageDescription(e.target.value)}
+                        rows={4}
+                        required
+                      />
+                    </div>
+                    <Button type="submit" className="w-full gap-2" disabled={sendingMessage}>
+                      <Send className="w-4 h-4" />
+                      {sendingMessage ? "Sending..." : "Send Message"}
+                    </Button>
+                  </form>
+                </div>
+              )}
 
-              {/* My Sent Messages (for regular users) / All Messages (for admins) */}
+              {/* Messages list */}
               <div className="bg-card rounded-xl p-6 border border-border">
                 <h2 className="text-lg font-semibold text-foreground mb-4">
                   {isAdmin ? "All Messages" : "My Sent Messages"}
@@ -1908,7 +1910,7 @@ const Dashboard = () => {
                 {messages.length === 0 ? (
                   <p className="text-muted-foreground text-center py-8">No messages yet</p>
                 ) : (
-                  <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                  <div className="space-y-3 max-h-[600px] overflow-y-auto">
                     {messages.map((message) => (
                       <div
                         key={message.id}
@@ -1946,6 +1948,19 @@ const Dashboard = () => {
                               <Button
                                 size="sm"
                                 variant="ghost"
+                                onClick={() => {
+                                  setReplyingTo(replyingTo === message.id ? null : message.id);
+                                  setReplyText("");
+                                }}
+                                className="text-xs h-7 px-2 text-primary"
+                              >
+                                Reply
+                              </Button>
+                            )}
+                            {isAdmin && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
                                 onClick={() => handleDeleteMessage(message.id)}
                                 className="text-destructive hover:text-destructive h-7 px-2"
                               >
@@ -1958,6 +1973,42 @@ const Dashboard = () => {
                         <p className="text-xs text-muted-foreground mt-2">
                           {new Date(message.created_at).toLocaleString()}
                         </p>
+
+                        {/* Replies */}
+                        {(messageReplies[message.id] || []).length > 0 && (
+                          <div className="mt-3 space-y-2 border-t border-border pt-3">
+                            <p className="text-xs font-medium text-foreground">Replies</p>
+                            {(messageReplies[message.id] || []).map((reply) => (
+                              <div key={reply.id} className="pl-3 border-l-2 border-primary/30">
+                                <p className="text-sm text-foreground">{reply.reply_text}</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {reply.user_id === message.user_id ? "You" : "Admin"} · {new Date(reply.created_at).toLocaleString()}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Reply form for admins */}
+                        {isAdmin && replyingTo === message.id && (
+                          <div className="mt-3 border-t border-border pt-3 space-y-2">
+                            <Textarea
+                              placeholder="Write your reply..."
+                              value={replyText}
+                              onChange={(e) => setReplyText(e.target.value)}
+                              rows={2}
+                            />
+                            <div className="flex gap-2 justify-end">
+                              <Button size="sm" variant="outline" onClick={() => setReplyingTo(null)}>
+                                Cancel
+                              </Button>
+                              <Button size="sm" onClick={() => handleSendReply(message.id)} disabled={!replyText.trim()}>
+                                <Send className="w-3 h-3 mr-1" />
+                                Send Reply
+                              </Button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
