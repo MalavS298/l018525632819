@@ -1,0 +1,1 @@
+UPDATE public.profiles SET approved = true WHERE approved = false;
