@@ -503,12 +503,13 @@ const Dashboard = () => {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("full_name")
+        .select("full_name, approved")
         .eq("id", user?.id)
         .single();
 
       if (error) throw error;
       setUserName(data?.full_name || null);
+      setUserApproved(data?.approved ?? false);
     } catch (error) {
       console.error("Error fetching user profile:", error);
     }
