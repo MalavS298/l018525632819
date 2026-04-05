@@ -1109,7 +1109,22 @@ const Dashboard = () => {
     }
   };
 
-  const handleDeleteUser = async (userId: string) => {
+  const handleApproveUser = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ approved: true })
+        .eq("id", userId);
+      if (error) throw error;
+      toast.success("User approved!");
+      fetchUsers();
+    } catch (error) {
+      console.error("Error approving user:", error);
+      toast.error("Failed to approve user");
+    }
+  };
+
+
     if (!confirm("Are you sure you want to delete this user? This will also delete all their submissions.")) {
       return;
     }
