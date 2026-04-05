@@ -61,6 +61,7 @@ interface UserProfile {
   email: string | null;
   full_name: string | null;
   created_at: string;
+  approved?: boolean;
 }
 
 // Add Hours Form Component
