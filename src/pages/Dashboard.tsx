@@ -475,6 +475,7 @@ const Dashboard = () => {
 
   // Get user's name from profiles
   const [userName, setUserName] = useState<string | null>(null);
+  const [userApproved, setUserApproved] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
