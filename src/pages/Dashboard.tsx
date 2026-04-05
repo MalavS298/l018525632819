@@ -1095,7 +1095,15 @@ const Dashboard = () => {
 
       if (error) throw error;
 
-      toast.success("User added successfully!");
+      // Auto-approve users added by admin
+      if (data?.user?.id) {
+        await supabase
+          .from("profiles")
+          .update({ approved: true })
+          .eq("id", data.user.id);
+      }
+
+      toast.success("User added and approved!");
       setNewUserEmail("");
       setNewUserPassword("");
       setNewUserName("");
