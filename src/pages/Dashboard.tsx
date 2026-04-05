@@ -61,6 +61,7 @@ interface UserProfile {
   email: string | null;
   full_name: string | null;
   created_at: string;
+  approved?: boolean;
 }
 
 // Add Hours Form Component
@@ -474,6 +475,7 @@ const Dashboard = () => {
 
   // Get user's name from profiles
   const [userName, setUserName] = useState<string | null>(null);
+  const [userApproved, setUserApproved] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -501,12 +503,13 @@ const Dashboard = () => {
     try {
       const { data, error } = await supabase
         .from("profiles")
-        .select("full_name")
+        .select("full_name, approved")
         .eq("id", user?.id)
         .single();
 
       if (error) throw error;
       setUserName(data?.full_name || null);
+      setUserApproved(data?.approved ?? false);
     } catch (error) {
       console.error("Error fetching user profile:", error);
     }
@@ -1092,7 +1095,15 @@ const Dashboard = () => {
 
       if (error) throw error;
 
-      toast.success("User added successfully!");
+      // Auto-approve users added by admin
+      if (data?.user?.id) {
+        await supabase
+          .from("profiles")
+          .update({ approved: true })
+          .eq("id", data.user.id);
+      }
+
+      toast.success("User added and approved!");
       setNewUserEmail("");
       setNewUserPassword("");
       setNewUserName("");
@@ -1103,6 +1114,21 @@ const Dashboard = () => {
       toast.error(error.message || "Failed to add user");
     } finally {
       setAddingUser(false);
+    }
+  };
+
+  const handleApproveUser = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ approved: true })
+        .eq("id", userId);
+      if (error) throw error;
+      toast.success("User approved!");
+      fetchUsers();
+    } catch (error) {
+      console.error("Error approving user:", error);
+      toast.error("Failed to approve user");
     }
   };
 
@@ -1157,6 +1183,26 @@ const Dashboard = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  // Gate unapproved non-admin users
+  if (!isAdmin && userApproved === false) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Clock className="w-8 h-8 text-primary" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground mb-2 font-display">Pending Approval</h1>
+          <p className="text-muted-foreground mb-6">
+            Your account is awaiting admin approval. You'll be able to access the dashboard once an admin approves your account.
+          </p>
+          <Button variant="outline" onClick={async () => { await signOut(); navigate("/login"); }}>
+            Sign Out
+          </Button>
+        </div>
       </div>
     );
   }
@@ -1618,100 +1664,150 @@ const Dashboard = () => {
           )}
 
           {activeTab === "users" && isAdmin && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Add User Form */}
-              <div className="bg-card rounded-xl p-6 border border-border">
-                <h2 className="text-lg font-semibold text-foreground mb-4">Add New User</h2>
-                <form onSubmit={handleAddUser} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="newUserName">Full Name</Label>
-                    <Input
-                      id="newUserName"
-                      type="text"
-                      placeholder="John Doe"
-                      value={newUserName}
-                      onChange={(e) => setNewUserName(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="newUserEmail">Email</Label>
-                    <Input
-                      id="newUserEmail"
-                      type="email"
-                      placeholder="user@example.com"
-                      value={newUserEmail}
-                      onChange={(e) => setNewUserEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="newUserPassword">Password</Label>
-                    <Input
-                      id="newUserPassword"
-                      type="password"
-                      placeholder="••••••••"
-                      value={newUserPassword}
-                      onChange={(e) => setNewUserPassword(e.target.value)}
-                      required
-                      minLength={6}
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={addingUser}>
-                    {addingUser ? "Adding..." : "Add User"}
-                  </Button>
-                </form>
-              </div>
-
-              {/* Users List */}
-              <div className="bg-card rounded-xl p-6 border border-border">
-                <h2 className="text-lg font-semibold text-foreground mb-4">All Users</h2>
-                <Input
-                  placeholder="Search users by name or email..."
-                  value={userSearch}
-                  onChange={(e) => setUserSearch(e.target.value)}
-                  className="mb-4"
-                />
-                {users.length === 0 ? (
-                  <p className="text-muted-foreground text-center py-8">No users yet</p>
-                ) : (
-                  <div className="space-y-3 max-h-[400px] overflow-y-auto">
-                    {users.filter((u) => {
-                      const q = userSearch.toLowerCase();
-                      return !q || (u.full_name || "").toLowerCase().includes(q) || (u.email || "").toLowerCase().includes(q);
-                    }).map((userProfile) => (
-                      <div
-                        key={userProfile.id}
-                        className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border"
-                      >
-                        <div>
-                          <p className="font-medium text-foreground">
-                            {userProfile.full_name || "No name"}
-                          </p>
-                          <p className="text-sm text-muted-foreground">{userProfile.email}</p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(userProfile.created_at).toLocaleDateString()}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteUser(userProfile.id)}
-                            disabled={deletingUserId === userProfile.id}
-                            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
-                          >
-                            {deletingUserId === userProfile.id ? (
-                              <span className="animate-spin">⋯</span>
-                            ) : (
+            <div className="space-y-6">
+              {/* Pending Approval Section */}
+              {(() => {
+                const pendingUsers = users.filter(u => !u.approved);
+                if (pendingUsers.length === 0) return null;
+                return (
+                  <div className="bg-card rounded-xl p-6 border-2 border-primary">
+                    <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                      <Clock className="w-5 h-5 text-primary" />
+                      Pending Approval ({pendingUsers.length})
+                    </h2>
+                    <div className="space-y-3">
+                      {pendingUsers.map((userProfile) => (
+                        <div
+                          key={userProfile.id}
+                          className="flex items-center justify-between p-3 bg-primary/5 rounded-lg border border-primary/20"
+                        >
+                          <div>
+                            <p className="font-medium text-foreground">
+                              {userProfile.full_name || "No name"}
+                            </p>
+                            <p className="text-sm text-muted-foreground">{userProfile.email}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleApproveUser(userProfile.id)}
+                              className="gap-1"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                              Approve
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteUser(userProfile.id)}
+                              disabled={deletingUserId === userProfile.id}
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
+                            >
                               <Trash2 className="w-4 h-4" />
-                            )}
-                          </Button>
+                            </Button>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
-                )}
+                );
+              })()}
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Add User Form */}
+                <div className="bg-card rounded-xl p-6 border border-border">
+                  <h2 className="text-lg font-semibold text-foreground mb-4">Add New User</h2>
+                  <form onSubmit={handleAddUser} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="newUserName">Full Name</Label>
+                      <Input
+                        id="newUserName"
+                        type="text"
+                        placeholder="John Doe"
+                        value={newUserName}
+                        onChange={(e) => setNewUserName(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="newUserEmail">Email</Label>
+                      <Input
+                        id="newUserEmail"
+                        type="email"
+                        placeholder="user@example.com"
+                        value={newUserEmail}
+                        onChange={(e) => setNewUserEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="newUserPassword">Password</Label>
+                      <Input
+                        id="newUserPassword"
+                        type="password"
+                        placeholder="••••••••"
+                        value={newUserPassword}
+                        onChange={(e) => setNewUserPassword(e.target.value)}
+                        required
+                        minLength={6}
+                      />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={addingUser}>
+                      {addingUser ? "Adding..." : "Add User"}
+                    </Button>
+                  </form>
+                </div>
+
+                {/* Users List */}
+                <div className="bg-card rounded-xl p-6 border border-border">
+                  <h2 className="text-lg font-semibold text-foreground mb-4">Approved Users</h2>
+                  <Input
+                    placeholder="Search users by name or email..."
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    className="mb-4"
+                  />
+                  {users.filter(u => u.approved).length === 0 ? (
+                    <p className="text-muted-foreground text-center py-8">No approved users yet</p>
+                  ) : (
+                    <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                      {users.filter(u => u.approved).filter((u) => {
+                        const q = userSearch.toLowerCase();
+                        return !q || (u.full_name || "").toLowerCase().includes(q) || (u.email || "").toLowerCase().includes(q);
+                      }).map((userProfile) => (
+                        <div
+                          key={userProfile.id}
+                          className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border"
+                        >
+                          <div>
+                            <p className="font-medium text-foreground">
+                              {userProfile.full_name || "No name"}
+                            </p>
+                            <p className="text-sm text-muted-foreground">{userProfile.email}</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(userProfile.created_at).toLocaleDateString()}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteUser(userProfile.id)}
+                              disabled={deletingUserId === userProfile.id}
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0"
+                            >
+                              {deletingUserId === userProfile.id ? (
+                                <span className="animate-spin">⋯</span>
+                              ) : (
+                                <Trash2 className="w-4 h-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
