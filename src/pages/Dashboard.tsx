@@ -1164,6 +1164,26 @@ const Dashboard = () => {
     );
   }
 
+  // Gate unapproved non-admin users
+  if (!isAdmin && userApproved === false) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Clock className="w-8 h-8 text-primary" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground mb-2 font-display">Pending Approval</h1>
+          <p className="text-muted-foreground mb-6">
+            Your account is awaiting admin approval. You'll be able to access the dashboard once an admin approves your account.
+          </p>
+          <Button variant="outline" onClick={async () => { await signOut(); navigate("/login"); }}>
+            Sign Out
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   const pendingSubmissions = allSubmissions.filter(s => s.status === "pending");
   const unreadMessages = messages.filter(m => !m.read);
 
