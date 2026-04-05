@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { Menu, X, GraduationCap, LayoutDashboard, LogIn } from "lucide-react";
+import { Menu, X, GraduationCap, LayoutDashboard, LogIn, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useTheme } from "@/hooks/useTheme";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const { user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const navLinks = [
     { name: "Home", href: "/" },
@@ -56,6 +58,13 @@ const Navbar = () => {
 
           {/* Right side buttons */}
           <div className="hidden lg:flex items-center gap-3">
+            <button
+              onClick={toggleTheme}
+              className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded transition-colors"
+              aria-label="Toggle theme"
+            >
+              {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
             {user ? (
               <Link to="/dashboard">
                 <Button className="gap-2 bg-primary text-secondary hover:bg-primary/90">
@@ -101,7 +110,14 @@ const Navbar = () => {
                 {link.name}
               </Link>
             ))}
-            <div className="pt-4 border-t border-white/10">
+            <div className="pt-4 border-t border-white/10 space-y-2">
+              <button
+                onClick={toggleTheme}
+                className="w-full flex items-center gap-3 px-4 py-2 text-white/80 hover:text-white hover:bg-white/10 rounded transition-colors"
+              >
+                {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+              </button>
               {user ? (
                 <Link to="/dashboard" onClick={() => setIsOpen(false)}>
                   <Button className="w-full gap-2 bg-primary text-secondary hover:bg-primary/90">
