@@ -91,14 +91,8 @@ const DashboardSidebar = ({
       : []),
   ];
 
-  // Track open/closed state of each section. Default: open if it contains the active tab.
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
-    const initial: Record<string, boolean> = {};
-    sections.forEach((s) => {
-      initial[s.id] = true;
-    });
-    return initial;
-  });
+  // Track open/closed state of each section. Default: all collapsed.
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
 
   const toggleSection = (id: string) => {
     setOpenSections((prev) => ({ ...prev, [id]: !prev[id] }));
