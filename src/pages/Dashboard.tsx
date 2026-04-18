@@ -2114,6 +2114,10 @@ const Dashboard = () => {
             </div>
           )}
 
+          {activeTab === "previous-years" && (
+            <PreviousYears submissions={submissions} />
+          )}
+
           {/* Meetings Tab */}
           {activeTab === "meetings" && (
             <div className="space-y-6">
