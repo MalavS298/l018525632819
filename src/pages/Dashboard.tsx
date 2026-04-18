@@ -1318,12 +1318,16 @@ const Dashboard = () => {
                 }}
                 onResetAllHours={async () => {
                   try {
+                    const currentYear = new Date().getFullYear();
+                    const startOfYear = `${currentYear}-01-01`;
+                    const startOfNextYear = `${currentYear + 1}-01-01`;
                     const { error } = await supabase
                       .from("submissions")
                       .delete()
-                      .neq("id", "00000000-0000-0000-0000-000000000000");
+                      .gte("service_date", startOfYear)
+                      .lt("service_date", startOfNextYear);
                     if (error) throw error;
-                    toast.success("All hours have been reset successfully");
+                    toast.success(`${currentYear} hours have been reset. Previous years are preserved.`);
                     fetchSubmissions();
                     fetchAllSubmissions();
                   } catch (error: any) {

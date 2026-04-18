@@ -40,7 +40,7 @@ const QuickActions = ({ isAdmin, setActiveTab, onSubmitHours, acceptingResponses
       action: onSyncToExternal || (() => {}),
     },
     {
-      label: "Reset All Hours",
+      label: "Reset This Year's Hours",
       icon: Trash2,
       color: "text-red-600",
       action: () => setShowResetConfirm(true),
@@ -113,9 +113,9 @@ const QuickActions = ({ isAdmin, setActiveTab, onSubmitHours, acceptingResponses
       <Dialog open={showResetConfirm} onOpenChange={(open) => { setShowResetConfirm(open); if (!open) setConfirmText(""); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-destructive">Reset All Hours</DialogTitle>
+            <DialogTitle className="text-destructive">Reset This Year's Hours</DialogTitle>
             <DialogDescription>
-              This will permanently delete <strong>all submissions</strong> for every user. This action cannot be undone.
+              This will permanently delete <strong>all submissions from {new Date().getFullYear()}</strong> for every user. Submissions from previous years will be preserved. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 py-2">
@@ -141,7 +141,7 @@ const QuickActions = ({ isAdmin, setActiveTab, onSubmitHours, acceptingResponses
                 setConfirmText("");
               }}
             >
-              {resettingHours ? "Resetting..." : "Reset All Hours"}
+              {resettingHours ? "Resetting..." : "Reset This Year"}
             </Button>
           </DialogFooter>
         </DialogContent>
