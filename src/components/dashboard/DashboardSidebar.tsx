@@ -8,10 +8,11 @@ import {
   FileText,
   Mail,
   Video,
-  Settings
+  Settings,
+  Calendar
 } from "lucide-react";
 
-type TabType = "submit" | "pending" | "all" | "users" | "newsletters" | "statistics" | "inbox" | "meetings";
+type TabType = "submit" | "pending" | "all" | "users" | "newsletters" | "statistics" | "inbox" | "meetings" | "previous-years";
 
 interface DashboardSidebarProps {
   activeTab: TabType;
@@ -32,12 +33,14 @@ interface NavItem {
 const DashboardSidebar = ({ activeTab, setActiveTab, isAdmin, pendingCount = 0, unreadMessageCount = 0, onOpenSettings }: DashboardSidebarProps) => {
   const userNavItems: NavItem[] = [
     { id: "submit", label: "Overview", icon: LayoutDashboard },
+    { id: "previous-years", label: "Previous Years", icon: Calendar },
     { id: "meetings", label: "Meetings", icon: Video },
     { id: "inbox", label: "Inbox", icon: Mail },
   ];
 
   const adminNavItems: NavItem[] = [
     { id: "submit", label: "Overview", icon: LayoutDashboard },
+    { id: "previous-years", label: "Previous Years", icon: Calendar },
     { id: "meetings", label: "Meetings", icon: Video },
     { id: "users", label: "Manage Users", icon: Users },
     { id: "pending", label: "Hours Inbox", icon: Inbox, badge: pendingCount },
