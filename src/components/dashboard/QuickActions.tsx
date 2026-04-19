@@ -3,6 +3,7 @@ import { Clock, Heart, Users, Inbox, ArrowRight, Newspaper, BarChart3, ShieldOff
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { getCurrentSchoolYear, formatSchoolYearLabel } from "@/lib/schoolYear";
 
 type TabType = "submit" | "pending" | "all" | "users" | "newsletters" | "statistics" | "inbox";
 
@@ -40,7 +41,7 @@ const QuickActions = ({ isAdmin, setActiveTab, onSubmitHours, acceptingResponses
       action: onSyncToExternal || (() => {}),
     },
     {
-      label: "Reset This Year's Hours",
+      label: "Reset This School Year's Hours",
       icon: Trash2,
       color: "text-red-600",
       action: () => setShowResetConfirm(true),
@@ -113,9 +114,9 @@ const QuickActions = ({ isAdmin, setActiveTab, onSubmitHours, acceptingResponses
       <Dialog open={showResetConfirm} onOpenChange={(open) => { setShowResetConfirm(open); if (!open) setConfirmText(""); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-destructive">Reset This Year's Hours</DialogTitle>
+            <DialogTitle className="text-destructive">Reset This School Year's Hours</DialogTitle>
             <DialogDescription>
-              This will permanently delete <strong>all submissions from {new Date().getFullYear()}</strong> for every user. Submissions from previous years will be preserved. This action cannot be undone.
+              This will permanently delete <strong>all submissions from the {formatSchoolYearLabel(getCurrentSchoolYear())} school year (Aug 1 – Jul 31)</strong> for every user. Submissions from previous school years will be preserved. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2 py-2">
