@@ -72,7 +72,7 @@ const StatsCards = ({
               <Icon className="w-5 h-5 text-muted-foreground/50" />
             </div>
             <p className={`text-3xl font-bold ${stat.valueColor} mb-1`}>
-              {stat.value}
+              <CountUp end={stat.end} decimals={stat.decimals} duration={1400} />
             </p>
             <p className="text-xs text-muted-foreground">{stat.subtitle}</p>
             {stat.warning && (
