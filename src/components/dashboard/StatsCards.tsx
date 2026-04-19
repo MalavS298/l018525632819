@@ -1,4 +1,5 @@
 import { TrendingUp, Users, Award, Clock } from "lucide-react";
+import CountUp from "@/components/CountUp";
 
 interface StatsCardsProps {
   syncHours: number;
@@ -23,7 +24,8 @@ const StatsCards = ({
   const stats = [
     {
       label: "Service Hours",
-      value: totalHours.toFixed(1),
+      end: totalHours,
+      decimals: 1,
       subtitle: "hours completed this year",
       icon: TrendingUp,
       valueColor: "text-blue-600",
@@ -31,7 +33,8 @@ const StatsCards = ({
     },
     {
       label: "Sync Hours",
-      value: syncHours.toFixed(1),
+      end: syncHours,
+      decimals: 1,
       subtitle: "synchronous service",
       icon: Users,
       valueColor: "text-purple-600",
@@ -39,7 +42,8 @@ const StatsCards = ({
     },
     {
       label: "Async Hours",
-      value: asyncHours.toFixed(1),
+      end: asyncHours,
+      decimals: 1,
       subtitle: "asynchronous service",
       icon: Clock,
       valueColor: "text-emerald-600",
@@ -50,7 +54,8 @@ const StatsCards = ({
   if (isAdmin && pendingCount > 0) {
     stats.push({
       label: "Pending",
-      value: pendingCount.toString(),
+      end: pendingCount,
+      decimals: 0,
       subtitle: "awaiting approval",
       icon: Award,
       valueColor: "text-amber-600",
@@ -72,7 +77,7 @@ const StatsCards = ({
               <Icon className="w-5 h-5 text-muted-foreground/50" />
             </div>
             <p className={`text-3xl font-bold ${stat.valueColor} mb-1`}>
-              {stat.value}
+              <CountUp end={stat.end} decimals={stat.decimals} duration={1400} />
             </p>
             <p className="text-xs text-muted-foreground">{stat.subtitle}</p>
             {stat.warning && (
