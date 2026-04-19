@@ -1,23 +1,28 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import CountUp from "@/components/CountUp";
 
-const baseStats = [
-  { label: "Active Members", value: "100+", key: "members" as const },
-  { label: "Community Service Hours", value: "1800+", key: "hours" as const },
-  { label: "Service Projects", value: "25+", key: "static" as const },
-  { label: "Years Established", value: "2+", key: "static" as const },
-  { label: "Alumni Network", value: "20+", key: "static" as const },
+interface StatItem {
+  label: string;
+  end: number;
+  suffix: string;
+  key: "members" | "hours" | "static";
+}
+
+const baseStats: StatItem[] = [
+  { label: "Active Members", end: 100, suffix: "+", key: "members" },
+  { label: "Community Service Hours", end: 1800, suffix: "+", key: "hours" },
+  { label: "Service Projects", end: 25, suffix: "+", key: "static" },
+  { label: "Years Established", end: 2, suffix: "+", key: "static" },
+  { label: "Alumni Network", end: 20, suffix: "+", key: "static" },
 ];
 
-const formatStat = (n: number) => {
-  // round down to nearest 10 then add "+"
-  const floored = Math.floor(n / 10) * 10;
-  return `${Math.max(floored, 0)}+`;
-};
+// round down to nearest 10
+const floorTen = (n: number) => Math.max(Math.floor(n / 10) * 10, 0);
 
 const About = () => {
-  const [members, setMembers] = useState<string | null>(null);
-  const [hours, setHours] = useState<string | null>(null);
+  const [members, setMembers] = useState<number | null>(null);
+  const [hours, setHours] = useState<number | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -26,8 +31,8 @@ const About = () => {
       if (!active || error || !data) return;
       const row = Array.isArray(data) ? data[0] : data;
       if (row) {
-        setMembers(formatStat(Number(row.active_members) || 0));
-        setHours(formatStat(Number(row.total_hours) || 0));
+        setMembers(floorTen(Number(row.active_members) || 0));
+        setHours(floorTen(Number(row.total_hours) || 0));
       }
     })();
     return () => {
@@ -36,8 +41,8 @@ const About = () => {
   }, []);
 
   const stats = baseStats.map((s) => {
-    if (s.key === "members" && members) return { ...s, value: members };
-    if (s.key === "hours" && hours) return { ...s, value: hours };
+    if (s.key === "members" && members !== null) return { ...s, end: members };
+    if (s.key === "hours" && hours !== null) return { ...s, end: hours };
     return s;
   });
 
@@ -67,9 +72,12 @@ const About = () => {
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {stats.map((stat) => (
-              <div key={stat.label} className="rounded-2xl p-6 text-center transition-colors bg-secondary-foreground">
+              <div
+                key={stat.label}
+                className="rounded-2xl p-6 text-center transition-colors bg-secondary-foreground"
+              >
                 <div className="text-3xl sm:text-4xl font-bold text-gradient mb-2">
-                  {stat.value}
+                  <CountUp end={stat.end} suffix={stat.suffix} duration={1800} />
                 </div>
                 <div className="text-sm text-muted-foreground">{stat.label}</div>
               </div>
