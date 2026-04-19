@@ -1,4 +1,5 @@
 import { Calendar, Clock, Users, TrendingUp } from "lucide-react";
+import { getSchoolYearForDate, getCurrentSchoolYear, formatSchoolYearLabel } from "@/lib/schoolYear";
 
 interface Submission {
   id: string;
