@@ -1318,16 +1318,16 @@ const Dashboard = () => {
                 }}
                 onResetAllHours={async () => {
                   try {
-                    const currentYear = new Date().getFullYear();
-                    const startOfYear = `${currentYear}-01-01`;
-                    const startOfNextYear = `${currentYear + 1}-01-01`;
+                    const { getCurrentSchoolYear, getSchoolYearRange, formatSchoolYearLabel } = await import("@/lib/schoolYear");
+                    const currentSchoolYear = getCurrentSchoolYear();
+                    const { start, endExclusive } = getSchoolYearRange(currentSchoolYear);
                     const { error } = await supabase
                       .from("submissions")
                       .delete()
-                      .gte("service_date", startOfYear)
-                      .lt("service_date", startOfNextYear);
+                      .gte("service_date", start)
+                      .lt("service_date", endExclusive);
                     if (error) throw error;
-                    toast.success(`${currentYear} hours have been reset. Previous years are preserved.`);
+                    toast.success(`${formatSchoolYearLabel(currentSchoolYear)} school year hours have been reset. Previous years are preserved.`);
                     fetchSubmissions();
                     fetchAllSubmissions();
                   } catch (error: any) {
