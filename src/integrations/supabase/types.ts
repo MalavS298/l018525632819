@@ -18,16 +18,19 @@ export type Database = {
         Row: {
           accepting_responses: boolean
           id: string
+          last_reset_at: string | null
           updated_at: string
         }
         Insert: {
           accepting_responses?: boolean
           id?: string
+          last_reset_at?: string | null
           updated_at?: string
         }
         Update: {
           accepting_responses?: boolean
           id?: string
+          last_reset_at?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -267,6 +270,48 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      year_resets: {
+        Row: {
+          async_hours: number
+          created_at: string
+          created_by: string | null
+          id: string
+          label: string
+          per_user_stats: Json
+          period_end: string
+          period_start: string
+          sync_hours: number
+          total_hours: number
+          total_submissions: number
+        }
+        Insert: {
+          async_hours?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label: string
+          per_user_stats?: Json
+          period_end: string
+          period_start: string
+          sync_hours?: number
+          total_hours?: number
+          total_submissions?: number
+        }
+        Update: {
+          async_hours?: number
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string
+          per_user_stats?: Json
+          period_end?: string
+          period_start?: string
+          sync_hours?: number
+          total_hours?: number
+          total_submissions?: number
         }
         Relationships: []
       }

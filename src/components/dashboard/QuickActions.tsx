@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Clock, Heart, Users, Inbox, ArrowRight, Newspaper, BarChart3, ShieldOff, ShieldCheck, RefreshCw, Trash2 } from "lucide-react";
+import { Clock, Users, ArrowRight, ShieldOff, ShieldCheck, RefreshCw, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getCurrentSchoolYear, formatSchoolYearLabel } from "@/lib/schoolYear";
+import { Label } from "@/components/ui/label";
 
 type TabType = "submit" | "pending" | "all" | "users" | "newsletters" | "statistics" | "inbox";
 
@@ -15,13 +15,14 @@ interface QuickActionsProps {
   onToggleAcceptingResponses?: () => void;
   onSyncToExternal?: () => void;
   syncing?: boolean;
-  onResetAllHours?: () => void;
+  onResetAllHours?: (label: string) => void;
   resettingHours?: boolean;
 }
 
-const QuickActions = ({ isAdmin, setActiveTab, onSubmitHours, acceptingResponses = true, onToggleAcceptingResponses, onSyncToExternal, syncing, onResetAllHours, resettingHours }: QuickActionsProps) => {
+const QuickActions = ({ isAdmin, onSubmitHours, acceptingResponses = true, onToggleAcceptingResponses, onSyncToExternal, syncing, onResetAllHours, resettingHours }: QuickActionsProps) => {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [confirmText, setConfirmText] = useState("");
+  const [yearLabel, setYearLabel] = useState("");
 
   const userActions = [
     { label: "Submit Hours", icon: Clock, color: "text-blue-600", action: onSubmitHours },
@@ -41,7 +42,7 @@ const QuickActions = ({ isAdmin, setActiveTab, onSubmitHours, acceptingResponses
       action: onSyncToExternal || (() => {}),
     },
     {
-      label: "Reset This School Year's Hours",
+      label: "End School Year & Reset",
       icon: Trash2,
       color: "text-red-600",
       action: () => setShowResetConfirm(true),
@@ -51,14 +52,13 @@ const QuickActions = ({ isAdmin, setActiveTab, onSubmitHours, acceptingResponses
   return (
     <>
       <div className={`grid ${isAdmin ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"} gap-6`}>
-        {/* Quick Actions */}
         <div className="bg-card rounded-xl p-6 border border-border">
           <div className="flex items-center gap-2 mb-2">
             <Clock className="w-5 h-5 text-primary" />
             <h3 className="text-lg font-semibold text-foreground">Quick Actions</h3>
           </div>
           <p className="text-sm text-muted-foreground mb-4">Common tasks you might want to complete</p>
-          
+
           <div className="space-y-2">
             {userActions.map((action) => {
               const Icon = action.icon;
@@ -79,7 +79,6 @@ const QuickActions = ({ isAdmin, setActiveTab, onSubmitHours, acceptingResponses
           </div>
         </div>
 
-        {/* Admin Actions */}
         {isAdmin && (
           <div className="bg-card rounded-xl p-6 border border-border">
             <div className="flex items-center gap-2 mb-2">
@@ -87,7 +86,7 @@ const QuickActions = ({ isAdmin, setActiveTab, onSubmitHours, acceptingResponses
               <h3 className="text-lg font-semibold text-foreground">Admin Actions</h3>
             </div>
             <p className="text-sm text-muted-foreground mb-4">Administrative functions available to you</p>
-            
+
             <div className="space-y-2">
               {adminActions.map((action) => {
                 const Icon = action.icon;
@@ -110,39 +109,48 @@ const QuickActions = ({ isAdmin, setActiveTab, onSubmitHours, acceptingResponses
         )}
       </div>
 
-      {/* Reset Confirmation Dialog */}
-      <Dialog open={showResetConfirm} onOpenChange={(open) => { setShowResetConfirm(open); if (!open) setConfirmText(""); }}>
+      <Dialog open={showResetConfirm} onOpenChange={(open) => { setShowResetConfirm(open); if (!open) { setConfirmText(""); setYearLabel(""); } }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="text-destructive">Reset This School Year's Hours</DialogTitle>
+            <DialogTitle className="text-destructive">End School Year & Reset</DialogTitle>
             <DialogDescription>
-              This will permanently delete <strong>all submissions from the {formatSchoolYearLabel(getCurrentSchoolYear())} school year (Aug 1 – Jul 31)</strong> for every user. Submissions from previous school years will be preserved. This action cannot be undone.
+              This will save a snapshot of the <strong>current school year</strong> to Previous Years and then permanently delete the underlying submissions for every user. After this, a new school year begins. This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 py-2">
-            <p className="text-sm text-muted-foreground">Type <strong>RESET</strong> to confirm:</p>
-            <Input
-              value={confirmText}
-              onChange={(e) => setConfirmText(e.target.value)}
-              placeholder="Type RESET"
-            />
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="year-label">Label this school year</Label>
+              <Input
+                id="year-label"
+                value={yearLabel}
+                onChange={(e) => setYearLabel(e.target.value)}
+                placeholder="e.g. 2025-2026"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Type <strong>RESET</strong> to confirm</Label>
+              <Input
+                value={confirmText}
+                onChange={(e) => setConfirmText(e.target.value)}
+                placeholder="Type RESET"
+              />
+            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowResetConfirm(false); setConfirmText(""); }}>
+            <Button variant="outline" onClick={() => { setShowResetConfirm(false); setConfirmText(""); setYearLabel(""); }}>
               Cancel
             </Button>
             <Button
               variant="destructive"
-              disabled={confirmText !== "RESET" || resettingHours}
-              onClick={async () => {
-                if (onResetAllHours) {
-                  onResetAllHours();
-                }
+              disabled={confirmText !== "RESET" || !yearLabel.trim() || resettingHours}
+              onClick={() => {
+                if (onResetAllHours) onResetAllHours(yearLabel.trim());
                 setShowResetConfirm(false);
                 setConfirmText("");
+                setYearLabel("");
               }}
             >
-              {resettingHours ? "Resetting..." : "Reset This Year"}
+              {resettingHours ? "Resetting..." : "End Year & Reset"}
             </Button>
           </DialogFooter>
         </DialogContent>

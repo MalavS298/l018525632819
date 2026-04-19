@@ -1,66 +1,67 @@
+import { useEffect, useState } from "react";
 import { Calendar, Clock, Users, TrendingUp } from "lucide-react";
-import { getSchoolYearForDate, getCurrentSchoolYear, formatSchoolYearLabel } from "@/lib/schoolYear";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
-interface Submission {
+interface PerUserStat {
+  user_id: string;
+  total_hours: number;
+  sync_hours: number;
+  async_hours: number;
+  submissions: number;
+}
+
+interface YearReset {
   id: string;
-  hours: number;
-  service_date: string;
-  service_type: string;
-  status: string;
-  description?: string | null;
+  label: string;
+  period_start: string;
+  period_end: string;
+  total_submissions: number;
+  total_hours: number;
+  sync_hours: number;
+  async_hours: number;
+  per_user_stats: PerUserStat[];
 }
 
 interface PreviousYearsProps {
-  submissions: Submission[];
+  isAdmin?: boolean;
 }
 
-interface YearStats {
-  year: number;
-  totalHours: number;
-  syncHours: number;
-  asyncHours: number;
-  submissionCount: number;
-  submissions: Submission[];
-}
+const PreviousYears = ({ isAdmin = false }: PreviousYearsProps) => {
+  const { user } = useAuth();
+  const [resets, setResets] = useState<YearReset[]>([]);
+  const [loading, setLoading] = useState(true);
 
-const PreviousYears = ({ submissions }: PreviousYearsProps) => {
-  const currentSchoolYear = getCurrentSchoolYear();
+  useEffect(() => {
+    const load = async () => {
+      const { data, error } = await supabase
+        .from("year_resets")
+        .select("*")
+        .order("period_end", { ascending: false });
+      if (!error && data) {
+        setResets(data as any as YearReset[]);
+      }
+      setLoading(false);
+    };
+    load();
+  }, []);
 
-  const approved = submissions.filter((s) => s.status === "approved");
-
-  const byYear = new Map<number, YearStats>();
-  for (const s of approved) {
-    const year = getSchoolYearForDate(s.service_date);
-    if (year >= currentSchoolYear) continue;
-    if (!byYear.has(year)) {
-      byYear.set(year, {
-        year,
-        totalHours: 0,
-        syncHours: 0,
-        asyncHours: 0,
-        submissionCount: 0,
-        submissions: [],
-      });
-    }
-    const stats = byYear.get(year)!;
-    const hours = Number(s.hours);
-    stats.totalHours += hours;
-    if (s.service_type === "synchronous") stats.syncHours += hours;
-    if (s.service_type === "asynchronous") stats.asyncHours += hours;
-    stats.submissionCount += 1;
-    stats.submissions.push(s);
+  if (loading) {
+    return (
+      <div className="bg-card rounded-xl p-12 border border-border text-center">
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      </div>
+    );
   }
 
-  const years = Array.from(byYear.values()).sort((a, b) => b.year - a.year);
-
-  if (years.length === 0) {
+  if (resets.length === 0) {
     return (
       <div className="bg-card rounded-xl p-12 border border-border text-center">
         <Calendar className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
         <h3 className="text-lg font-semibold text-foreground mb-2">No Previous School Years Yet</h3>
         <p className="text-sm text-muted-foreground max-w-md mx-auto">
-          Once you have approved service hours from previous school years,
-          you'll see a snapshot of your work here.
+          Once an admin ends the current school year, a snapshot of everyone's
+          approved hours will appear here.
         </p>
       </div>
     );
@@ -71,35 +72,52 @@ const PreviousYears = ({ submissions }: PreviousYearsProps) => {
       <div>
         <h2 className="text-lg font-semibold text-foreground">Previous School Years</h2>
         <p className="text-sm text-muted-foreground">
-          A snapshot of your service from past school years (Aug – Jul)
+          Snapshots saved each time an admin closes out a school year
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {years.map((y) => {
-          const metRequirement = y.totalHours >= 25 && y.syncHours >= 18.75;
+        {resets.map((y) => {
+          // For non-admins, show only their own stats; admins see chapter totals
+          const myStats = !isAdmin && user
+            ? y.per_user_stats.find((p) => p.user_id === user.id)
+            : null;
+
+          const totalHours = myStats ? myStats.total_hours : Number(y.total_hours);
+          const syncHours = myStats ? myStats.sync_hours : Number(y.sync_hours);
+          const asyncHours = myStats ? myStats.async_hours : Number(y.async_hours);
+          const subCount = myStats ? myStats.submissions : y.total_submissions;
+
+          if (!isAdmin && !myStats) {
+            // User had nothing in that year — still show the year as 0
+          }
+
+          const metRequirement = totalHours >= 25 && syncHours >= 18.75;
+
           return (
             <div
-              key={y.year}
+              key={y.id}
               className="bg-card rounded-xl border border-border overflow-hidden hover:shadow-md transition-shadow"
             >
               <div className="bg-primary/10 p-5 border-b border-border">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-primary" />
-                    <h3 className="text-2xl font-bold text-primary font-display">
-                      {formatSchoolYearLabel(y.year)}
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Calendar className="w-5 h-5 text-primary shrink-0" />
+                    <h3 className="text-xl font-bold text-primary font-display truncate">
+                      {y.label}
                     </h3>
                   </div>
-                  <span
-                    className={`text-xs font-medium px-2 py-1 rounded-full ${
-                      metRequirement
-                        ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
-                        : "bg-destructive/15 text-destructive"
-                    }`}
-                  >
-                    {metRequirement ? "Requirement met" : "Below minimum"}
-                  </span>
+                  {!isAdmin && (
+                    <span
+                      className={`text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap ${
+                        metRequirement
+                          ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400"
+                          : "bg-destructive/15 text-destructive"
+                      }`}
+                    >
+                      {metRequirement ? "Requirement met" : "Below minimum"}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -108,11 +126,11 @@ const PreviousYears = ({ submissions }: PreviousYearsProps) => {
                   <div className="flex items-center gap-2 mb-1">
                     <TrendingUp className="w-4 h-4 text-blue-600" />
                     <span className="text-xs font-medium text-muted-foreground">
-                      Total Hours
+                      {isAdmin ? "Chapter Total Hours" : "Total Hours"}
                     </span>
                   </div>
                   <p className="text-3xl font-bold text-blue-600">
-                    {y.totalHours.toFixed(1)}
+                    {totalHours.toFixed(1)}
                   </p>
                 </div>
 
@@ -123,7 +141,7 @@ const PreviousYears = ({ submissions }: PreviousYearsProps) => {
                       <span className="text-xs text-muted-foreground">Sync</span>
                     </div>
                     <p className="text-lg font-semibold text-purple-600">
-                      {y.syncHours.toFixed(1)}
+                      {syncHours.toFixed(1)}
                     </p>
                   </div>
                   <div>
@@ -132,17 +150,18 @@ const PreviousYears = ({ submissions }: PreviousYearsProps) => {
                       <span className="text-xs text-muted-foreground">Async</span>
                     </div>
                     <p className="text-lg font-semibold text-emerald-600">
-                      {y.asyncHours.toFixed(1)}
+                      {asyncHours.toFixed(1)}
                     </p>
                   </div>
                 </div>
 
                 <div className="pt-2 border-t border-border">
                   <p className="text-xs text-muted-foreground">
-                    <span className="font-semibold text-foreground">
-                      {y.submissionCount}
-                    </span>{" "}
-                    {y.submissionCount === 1 ? "submission" : "submissions"} approved
+                    <span className="font-semibold text-foreground">{subCount}</span>{" "}
+                    {subCount === 1 ? "submission" : "submissions"} approved
+                    {isAdmin && (
+                      <> · {y.per_user_stats.length} {y.per_user_stats.length === 1 ? "member" : "members"}</>
+                    )}
                   </p>
                 </div>
               </div>
