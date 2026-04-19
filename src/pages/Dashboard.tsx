@@ -1316,18 +1316,73 @@ const Dashboard = () => {
                     setSyncing(false);
                   }
                 }}
-                onResetAllHours={async () => {
+                onResetAllHours={async (label: string) => {
                   try {
-                    const { getCurrentSchoolYear, getSchoolYearRange, formatSchoolYearLabel } = await import("@/lib/schoolYear");
-                    const currentSchoolYear = getCurrentSchoolYear();
-                    const { start, endExclusive } = getSchoolYearRange(currentSchoolYear);
-                    const { error } = await supabase
+                    // Determine the period being closed out
+                    const { data: settings } = await supabase
+                      .from("app_settings")
+                      .select("last_reset_at")
+                      .eq("id", "global")
+                      .maybeSingle();
+                    const periodStart = (settings as any)?.last_reset_at ?? null;
+                    const periodEnd = new Date().toISOString();
+
+                    // Pull approved submissions in this period to snapshot
+                    let q = supabase
                       .from("submissions")
-                      .delete()
-                      .gte("service_date", start)
-                      .lt("service_date", endExclusive);
-                    if (error) throw error;
-                    toast.success(`${formatSchoolYearLabel(currentSchoolYear)} school year hours have been reset. Previous years are preserved.`);
+                      .select("user_id, hours, service_type, status, submitted_at")
+                      .eq("status", "approved");
+                    if (periodStart) q = q.gte("submitted_at", periodStart);
+                    q = q.lt("submitted_at", periodEnd);
+                    const { data: approvedRows, error: fetchErr } = await q;
+                    if (fetchErr) throw fetchErr;
+
+                    // Build per-user aggregates
+                    const perUser = new Map<string, { user_id: string; total_hours: number; sync_hours: number; async_hours: number; submissions: number }>();
+                    let total = 0, sync = 0, async_ = 0;
+                    for (const r of approvedRows || []) {
+                      const h = Number((r as any).hours) || 0;
+                      total += h;
+                      if ((r as any).service_type === "synchronous") sync += h;
+                      if ((r as any).service_type === "asynchronous") async_ += h;
+                      const uid = (r as any).user_id;
+                      if (!perUser.has(uid)) perUser.set(uid, { user_id: uid, total_hours: 0, sync_hours: 0, async_hours: 0, submissions: 0 });
+                      const p = perUser.get(uid)!;
+                      p.total_hours += h;
+                      if ((r as any).service_type === "synchronous") p.sync_hours += h;
+                      if ((r as any).service_type === "asynchronous") p.async_hours += h;
+                      p.submissions += 1;
+                    }
+
+                    // Save snapshot
+                    const { error: snapErr } = await supabase.from("year_resets").insert({
+                      label: label || "Previous Year",
+                      period_start: periodStart ?? (approvedRows && approvedRows[0] ? (approvedRows[0] as any).submitted_at : periodEnd),
+                      period_end: periodEnd,
+                      total_submissions: (approvedRows || []).length,
+                      total_hours: total,
+                      sync_hours: sync,
+                      async_hours: async_,
+                      per_user_stats: Array.from(perUser.values()) as any,
+                      created_by: user?.id ?? null,
+                    });
+                    if (snapErr) throw snapErr;
+
+                    // Delete the submissions in this period
+                    let del = supabase.from("submissions").delete();
+                    if (periodStart) del = del.gte("submitted_at", periodStart);
+                    del = del.lt("submitted_at", periodEnd);
+                    const { error: delErr } = await del;
+                    if (delErr) throw delErr;
+
+                    // Bump last_reset_at -> starts the next year
+                    const { error: updErr } = await supabase
+                      .from("app_settings")
+                      .update({ last_reset_at: periodEnd, updated_at: periodEnd })
+                      .eq("id", "global");
+                    if (updErr) throw updErr;
+
+                    toast.success(`Closed out "${label}". A new school year has begun.`);
                     fetchSubmissions();
                     fetchAllSubmissions();
                   } catch (error: any) {
