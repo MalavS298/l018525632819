@@ -2174,7 +2174,7 @@ const Dashboard = () => {
           )}
 
           {activeTab === "previous-years" && (
-            <PreviousYears submissions={submissions} />
+            <PreviousYears isAdmin={isAdmin} />
           )}
 
           {/* Meetings Tab */}
