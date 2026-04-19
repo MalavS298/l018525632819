@@ -23,14 +23,14 @@ interface YearStats {
 }
 
 const PreviousYears = ({ submissions }: PreviousYearsProps) => {
-  const currentYear = new Date().getFullYear();
+  const currentSchoolYear = getCurrentSchoolYear();
 
   const approved = submissions.filter((s) => s.status === "approved");
 
   const byYear = new Map<number, YearStats>();
   for (const s of approved) {
-    const year = new Date(s.service_date).getFullYear();
-    if (year >= currentYear) continue;
+    const year = getSchoolYearForDate(s.service_date);
+    if (year >= currentSchoolYear) continue;
     if (!byYear.has(year)) {
       byYear.set(year, {
         year,
@@ -56,10 +56,10 @@ const PreviousYears = ({ submissions }: PreviousYearsProps) => {
     return (
       <div className="bg-card rounded-xl p-12 border border-border text-center">
         <Calendar className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-foreground mb-2">No Previous Years Yet</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-2">No Previous School Years Yet</h3>
         <p className="text-sm text-muted-foreground max-w-md mx-auto">
-          Once you have approved service hours from previous years, you'll see a
-          snapshot of your work here.
+          Once you have approved service hours from previous school years,
+          you'll see a snapshot of your work here.
         </p>
       </div>
     );
@@ -68,9 +68,9 @@ const PreviousYears = ({ submissions }: PreviousYearsProps) => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">Previous Years</h2>
+        <h2 className="text-lg font-semibold text-foreground">Previous School Years</h2>
         <p className="text-sm text-muted-foreground">
-          A snapshot of your service from past years
+          A snapshot of your service from past school years (Aug – Jul)
         </p>
       </div>
 
@@ -87,7 +87,7 @@ const PreviousYears = ({ submissions }: PreviousYearsProps) => {
                   <div className="flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-primary" />
                     <h3 className="text-2xl font-bold text-primary font-display">
-                      {y.year}
+                      {formatSchoolYearLabel(y.year)}
                     </h3>
                   </div>
                   <span
