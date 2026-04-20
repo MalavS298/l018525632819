@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { getCurrentSchoolYear, getSchoolYearRange } from "@/lib/schoolYear";
+import { getCurrentSchoolYear } from "@/lib/schoolYear";
 
 export interface LeaderboardEntry {
   user_id: string;
@@ -27,7 +27,6 @@ export function useLeaderboard(currentUserId: string | undefined): UseLeaderboar
   const [refreshKey, setRefreshKey] = useState(0);
 
   const schoolYear = getCurrentSchoolYear();
-  const { start, endExclusive } = getSchoolYearRange(schoolYear);
   const schoolYearLabel = `${schoolYear - 1}-${String(schoolYear).slice(-2)}`;
 
   useEffect(() => {
@@ -42,13 +41,13 @@ export function useLeaderboard(currentUserId: string | undefined): UseLeaderboar
         .select("id, full_name, email, approved")
         .eq("approved", true);
 
-      // Fetch approved submissions in current school year
+      // Fetch ALL approved submissions since the last reset
+      // (matches what the StatsCards "Service Hours" totals show — the reset
+      // button is what clears the slate, not the school-year date boundary)
       const { data: subs } = await supabase
         .from("submissions")
-        .select("user_id, hours, service_type, service_date, status")
-        .eq("status", "approved")
-        .gte("service_date", start)
-        .lt("service_date", endExclusive);
+        .select("user_id, hours, service_type, status")
+        .eq("status", "approved");
 
       if (cancelled) return;
 
@@ -109,7 +108,7 @@ export function useLeaderboard(currentUserId: string | undefined): UseLeaderboar
     return () => {
       cancelled = true;
     };
-  }, [start, endExclusive, refreshKey]);
+  }, [refreshKey]);
 
   const myEntry = currentUserId
     ? entries.find((e) => e.user_id === currentUserId) ?? null
