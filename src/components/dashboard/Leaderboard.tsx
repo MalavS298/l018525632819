@@ -36,7 +36,7 @@ const Leaderboard = ({ open, onOpenChange, entries, loading, currentUserId, scho
             Service Hours Leaderboard
           </DialogTitle>
           <DialogDescription>
-            School year {schoolYearLabel} — ranked by approved hours
+            Ranked by approved service hours since the last reset
           </DialogDescription>
         </DialogHeader>
 
