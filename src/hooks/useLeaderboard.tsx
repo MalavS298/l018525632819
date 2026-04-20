@@ -108,7 +108,7 @@ export function useLeaderboard(currentUserId: string | undefined): UseLeaderboar
     return () => {
       cancelled = true;
     };
-  }, [start, endExclusive, refreshKey]);
+  }, [refreshKey]);
 
   const myEntry = currentUserId
     ? entries.find((e) => e.user_id === currentUserId) ?? null
