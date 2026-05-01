@@ -35,61 +35,35 @@ export function useLeaderboard(currentUserId: string | undefined): UseLeaderboar
     const load = async () => {
       setLoading(true);
 
-      // Fetch approved profiles
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, full_name, email, approved")
-        .eq("approved", true);
-
-      // Fetch ALL approved submissions since the last reset
-      // (matches what the StatsCards "Service Hours" totals show — the reset
-      // button is what clears the slate, not the school-year date boundary)
-      const { data: subs } = await supabase
-        .from("submissions")
-        .select("user_id, hours, service_type, status")
-        .eq("status", "approved");
+      const { data, error } = await supabase.rpc("get_leaderboard");
 
       if (cancelled) return;
 
-      const profileMap = new Map<string, { full_name: string | null; email: string | null }>();
-      (profiles || []).forEach((p) => {
-        profileMap.set(p.id, { full_name: p.full_name, email: p.email });
-      });
+      if (error) {
+        console.error("Error loading leaderboard:", error);
+        setEntries([]);
+        setLoading(false);
+        return;
+      }
 
-      // Aggregate per user (only approved members)
-      const totals = new Map<
-        string,
-        { total: number; sync: number; async: number }
-      >();
-      (subs || []).forEach((s) => {
-        if (!profileMap.has(s.user_id)) return; // exclude non-approved
-        const cur = totals.get(s.user_id) || { total: 0, sync: 0, async: 0 };
-        const h = Number(s.hours) || 0;
-        cur.total += h;
-        if (s.service_type === "synchronous") cur.sync += h;
-        else cur.async += h;
-        totals.set(s.user_id, cur);
-      });
+      const list: LeaderboardEntry[] = (data || []).map((entry) => ({
+        user_id: entry.user_id,
+        full_name: entry.full_name,
+        email: entry.email,
+        total_hours: Number(entry.total_hours) || 0,
+        sync_hours: Number(entry.sync_hours) || 0,
+        async_hours: Number(entry.async_hours) || 0,
+        rank: 0,
+      }));
 
-      // Include all approved members (even with 0 hours) so ranks reflect everyone
-      profileMap.forEach((_, uid) => {
-        if (!totals.has(uid)) totals.set(uid, { total: 0, sync: 0, async: 0 });
-      });
-
-      const list: LeaderboardEntry[] = Array.from(totals.entries()).map(
-        ([user_id, t]) => ({
-          user_id,
-          full_name: profileMap.get(user_id)?.full_name ?? null,
-          email: profileMap.get(user_id)?.email ?? null,
-          total_hours: t.total,
-          sync_hours: t.sync,
-          async_hours: t.async,
-          rank: 0,
-        })
+      // Sort desc by total hours; ties use a stable name/email fallback.
+      list.sort(
+        (a, b) =>
+          b.total_hours - a.total_hours ||
+          (a.full_name || a.email || "").localeCompare(b.full_name || b.email || "")
       );
 
-      // Sort desc by total_hours; ties → same rank (standard competition ranking)
-      list.sort((a, b) => b.total_hours - a.total_hours);
+      // Ties share the same rank (standard competition ranking).
       let lastHours = -1;
       let lastRank = 0;
       list.forEach((entry, idx) => {
