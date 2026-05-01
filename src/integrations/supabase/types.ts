@@ -320,6 +320,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_leaderboard: {
+        Args: never
+        Returns: {
+          async_hours: number
+          email: string
+          full_name: string
+          sync_hours: number
+          total_hours: number
+          user_id: string
+        }[]
+      }
       get_public_stats: {
         Args: never
         Returns: {
