@@ -1183,7 +1183,10 @@ const Dashboard = () => {
   };
 
   const handleMassDelete = async () => {
-    if (massDeleteIds.length === 0) return;
+    const targetIds = users
+      .filter(u => u.approved && u.id !== user?.id && !massKeepIds.includes(u.id))
+      .map(u => u.id);
+    if (targetIds.length === 0) return;
     setMassDeleting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -1193,7 +1196,7 @@ const Dashboard = () => {
       }
       let success = 0;
       let failed = 0;
-      for (const userId of massDeleteIds) {
+      for (const userId of targetIds) {
         try {
           const response = await fetch(
             `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`,
@@ -1217,7 +1220,7 @@ const Dashboard = () => {
       }
       if (success > 0) toast.success(`Deleted ${success} user${success === 1 ? "" : "s"}`);
       if (failed > 0) toast.error(`Failed to delete ${failed} user${failed === 1 ? "" : "s"}`);
-      setMassDeleteIds([]);
+      setMassKeepIds([]);
       setMassDeleteConfirmOpen(false);
       fetchUsers();
       fetchAllSubmissions();
