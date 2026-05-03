@@ -11,6 +11,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Upload, X, Clock, CheckCircle, XCircle, ZoomIn, CalendarIcon, Plus, Trash2, ChevronDown, ChevronUp, Home, Send, Video, ExternalLink, FileText, Users, Check, ChevronsUpDown } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -422,6 +424,10 @@ const Dashboard = () => {
   const [newUserName, setNewUserName] = useState("");
   const [addingUser, setAddingUser] = useState(false);
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [massDeleteIds, setMassDeleteIds] = useState<string[]>([]);
+  const [massDeleteSearch, setMassDeleteSearch] = useState("");
+  const [massDeleteConfirmOpen, setMassDeleteConfirmOpen] = useState(false);
+  const [massDeleting, setMassDeleting] = useState(false);
 
   // Statistics search state
   const [statisticsSearch, setStatisticsSearch] = useState("");
@@ -1175,6 +1181,50 @@ const Dashboard = () => {
     }
   };
 
+  const handleMassDelete = async () => {
+    if (massDeleteIds.length === 0) return;
+    setMassDeleting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Not authenticated");
+        return;
+      }
+      let success = 0;
+      let failed = 0;
+      for (const userId of massDeleteIds) {
+        try {
+          const response = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${session.access_token}`,
+              },
+              body: JSON.stringify({ userId }),
+            }
+          );
+          if (!response.ok) {
+            failed++;
+          } else {
+            success++;
+          }
+        } catch {
+          failed++;
+        }
+      }
+      if (success > 0) toast.success(`Deleted ${success} user${success === 1 ? "" : "s"}`);
+      if (failed > 0) toast.error(`Failed to delete ${failed} user${failed === 1 ? "" : "s"}`);
+      setMassDeleteIds([]);
+      setMassDeleteConfirmOpen(false);
+      fetchUsers();
+      fetchAllSubmissions();
+    } finally {
+      setMassDeleting(false);
+    }
+  };
+
   const handleSignOut = async () => {
     await signOut();
     navigate("/login");
@@ -1772,6 +1822,85 @@ const Dashboard = () => {
                   </div>
                 );
               })()}
+
+              {/* Mass Deletion */}
+              {(() => {
+                const approvedUsers = users.filter(u => u.approved && u.id !== user?.id);
+                const filtered = approvedUsers.filter(u => {
+                  const q = massDeleteSearch.toLowerCase();
+                  return !q || (u.full_name?.toLowerCase().includes(q)) || (u.email?.toLowerCase().includes(q));
+                });
+                const toggle = (id: string) => {
+                  setMassDeleteIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+                };
+                return (
+                  <div className="bg-card rounded-xl p-6 border-2 border-destructive/40">
+                    <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                      <h2 className="text-lg font-semibold text-destructive flex items-center gap-2">
+                        <Trash2 className="w-5 h-5" />
+                        Mass Deletion
+                      </h2>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">{massDeleteIds.length} selected</span>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          disabled={massDeleteIds.length === 0 || massDeleting}
+                          onClick={() => setMassDeleteConfirmOpen(true)}
+                        >
+                          Delete Selected
+                        </Button>
+                      </div>
+                    </div>
+                    <Input
+                      placeholder="Search members..."
+                      value={massDeleteSearch}
+                      onChange={(e) => setMassDeleteSearch(e.target.value)}
+                      className="mb-3"
+                    />
+                    <div className="max-h-64 overflow-y-auto space-y-1 border border-border rounded-lg p-2">
+                      {filtered.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">No members found</p>
+                      ) : filtered.map(u => (
+                        <label
+                          key={u.id}
+                          className="flex items-center gap-3 p-2 rounded hover:bg-muted cursor-pointer"
+                        >
+                          <Checkbox
+                            checked={massDeleteIds.includes(u.id)}
+                            onCheckedChange={() => toggle(u.id)}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{u.full_name || "No name"}</p>
+                            <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <AlertDialog open={massDeleteConfirmOpen} onOpenChange={setMassDeleteConfirmOpen}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete {massDeleteIds.length} member{massDeleteIds.length === 1 ? "" : "s"}?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This permanently removes the selected members and all of their submissions. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={massDeleting}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={(e) => { e.preventDefault(); handleMassDelete(); }}
+                      disabled={massDeleting}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {massDeleting ? "Deleting..." : "Confirm Delete"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Add User Form */}
