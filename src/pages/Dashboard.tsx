@@ -422,6 +422,10 @@ const Dashboard = () => {
   const [newUserName, setNewUserName] = useState("");
   const [addingUser, setAddingUser] = useState(false);
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [massDeleteIds, setMassDeleteIds] = useState<string[]>([]);
+  const [massDeleteSearch, setMassDeleteSearch] = useState("");
+  const [massDeleteConfirmOpen, setMassDeleteConfirmOpen] = useState(false);
+  const [massDeleting, setMassDeleting] = useState(false);
 
   // Statistics search state
   const [statisticsSearch, setStatisticsSearch] = useState("");
