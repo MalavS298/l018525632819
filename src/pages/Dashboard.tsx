@@ -1823,6 +1823,85 @@ const Dashboard = () => {
                 );
               })()}
 
+              {/* Mass Deletion */}
+              {(() => {
+                const approvedUsers = users.filter(u => u.approved && u.id !== user?.id);
+                const filtered = approvedUsers.filter(u => {
+                  const q = massDeleteSearch.toLowerCase();
+                  return !q || (u.full_name?.toLowerCase().includes(q)) || (u.email?.toLowerCase().includes(q));
+                });
+                const toggle = (id: string) => {
+                  setMassDeleteIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+                };
+                return (
+                  <div className="bg-card rounded-xl p-6 border-2 border-destructive/40">
+                    <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                      <h2 className="text-lg font-semibold text-destructive flex items-center gap-2">
+                        <Trash2 className="w-5 h-5" />
+                        Mass Deletion
+                      </h2>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">{massDeleteIds.length} selected</span>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          disabled={massDeleteIds.length === 0 || massDeleting}
+                          onClick={() => setMassDeleteConfirmOpen(true)}
+                        >
+                          Delete Selected
+                        </Button>
+                      </div>
+                    </div>
+                    <Input
+                      placeholder="Search members..."
+                      value={massDeleteSearch}
+                      onChange={(e) => setMassDeleteSearch(e.target.value)}
+                      className="mb-3"
+                    />
+                    <div className="max-h-64 overflow-y-auto space-y-1 border border-border rounded-lg p-2">
+                      {filtered.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">No members found</p>
+                      ) : filtered.map(u => (
+                        <label
+                          key={u.id}
+                          className="flex items-center gap-3 p-2 rounded hover:bg-muted cursor-pointer"
+                        >
+                          <Checkbox
+                            checked={massDeleteIds.includes(u.id)}
+                            onCheckedChange={() => toggle(u.id)}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{u.full_name || "No name"}</p>
+                            <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              <AlertDialog open={massDeleteConfirmOpen} onOpenChange={setMassDeleteConfirmOpen}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete {massDeleteIds.length} member{massDeleteIds.length === 1 ? "" : "s"}?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This permanently removes the selected members and all of their submissions. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={massDeleting}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={(e) => { e.preventDefault(); handleMassDelete(); }}
+                      disabled={massDeleting}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {massDeleting ? "Deleting..." : "Confirm Delete"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Add User Form */}
                 <div className="bg-card rounded-xl p-6 border border-border">
