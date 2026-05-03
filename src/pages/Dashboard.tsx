@@ -1834,53 +1834,76 @@ const Dashboard = () => {
                   const q = massDeleteSearch.toLowerCase();
                   return !q || (u.full_name?.toLowerCase().includes(q)) || (u.email?.toLowerCase().includes(q));
                 });
-                const toggle = (id: string) => {
-                  setMassDeleteIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+                const toggleKeep = (id: string) => {
+                  setMassKeepIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
                 };
+                const deleteCount = approvedUsers.length - massKeepIds.filter(id => approvedUsers.some(u => u.id === id)).length;
                 return (
-                  <div className="bg-card rounded-xl p-6 border-2 border-destructive/40">
-                    <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                  <div className="bg-card rounded-xl border-2 border-destructive/40 overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setMassDeleteOpen(o => !o)}
+                      className="w-full flex items-center justify-between p-6 hover:bg-destructive/5 transition-colors"
+                    >
                       <h2 className="text-lg font-semibold text-destructive flex items-center gap-2">
                         <Trash2 className="w-5 h-5" />
                         Mass Deletion
                       </h2>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">{massDeleteIds.length} selected</span>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          disabled={massDeleteIds.length === 0 || massDeleting}
-                          onClick={() => setMassDeleteConfirmOpen(true)}
-                        >
-                          Delete Selected
-                        </Button>
+                      {massDeleteOpen ? <ChevronUp className="w-5 h-5 text-destructive" /> : <ChevronDown className="w-5 h-5 text-destructive" />}
+                    </button>
+                    {massDeleteOpen && (
+                      <div className="px-6 pb-6 space-y-3">
+                        <p className="text-sm text-muted-foreground">
+                          Select the members you want to <span className="font-semibold text-foreground">keep</span>. Everyone else will be deleted.
+                        </p>
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <span className="text-sm text-muted-foreground">
+                            {massKeepIds.filter(id => approvedUsers.some(u => u.id === id)).length} kept · <span className="text-destructive font-medium">{deleteCount} will be deleted</span>
+                          </span>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            disabled={deleteCount === 0 || massDeleting}
+                            onClick={() => setMassDeleteConfirmOpen(true)}
+                          >
+                            Delete Unselected
+                          </Button>
+                        </div>
+                        <Input
+                          placeholder="Search members..."
+                          value={massDeleteSearch}
+                          onChange={(e) => setMassDeleteSearch(e.target.value)}
+                        />
+                        <div className="max-h-64 overflow-y-auto space-y-1 border border-border rounded-lg p-2">
+                          {filtered.length === 0 ? (
+                            <p className="text-sm text-muted-foreground text-center py-4">No members found</p>
+                          ) : filtered.map(u => {
+                            const kept = massKeepIds.includes(u.id);
+                            return (
+                              <label
+                                key={u.id}
+                                className={cn(
+                                  "flex items-center gap-3 p-2 rounded cursor-pointer transition-colors",
+                                  kept ? "bg-primary/10 hover:bg-primary/15" : "hover:bg-destructive/5"
+                                )}
+                              >
+                                <Checkbox
+                                  checked={kept}
+                                  onCheckedChange={() => toggleKeep(u.id)}
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-foreground truncate">{u.full_name || "No name"}</p>
+                                  <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                                </div>
+                                <span className={cn("text-xs font-medium", kept ? "text-primary" : "text-destructive")}>
+                                  {kept ? "Keep" : "Delete"}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                    <Input
-                      placeholder="Search members..."
-                      value={massDeleteSearch}
-                      onChange={(e) => setMassDeleteSearch(e.target.value)}
-                      className="mb-3"
-                    />
-                    <div className="max-h-64 overflow-y-auto space-y-1 border border-border rounded-lg p-2">
-                      {filtered.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-4">No members found</p>
-                      ) : filtered.map(u => (
-                        <label
-                          key={u.id}
-                          className="flex items-center gap-3 p-2 rounded hover:bg-muted cursor-pointer"
-                        >
-                          <Checkbox
-                            checked={massDeleteIds.includes(u.id)}
-                            onCheckedChange={() => toggle(u.id)}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{u.full_name || "No name"}</p>
-                            <p className="text-xs text-muted-foreground truncate">{u.email}</p>
-                          </div>
-                        </label>
-                      ))}
-                    </div>
+                    )}
                   </div>
                 );
               })()}
@@ -1888,9 +1911,15 @@ const Dashboard = () => {
               <AlertDialog open={massDeleteConfirmOpen} onOpenChange={setMassDeleteConfirmOpen}>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Delete {massDeleteIds.length} member{massDeleteIds.length === 1 ? "" : "s"}?</AlertDialogTitle>
+                    <AlertDialogTitle>
+                      {(() => {
+                        const approvedUsers = users.filter(u => u.approved && u.id !== user?.id);
+                        const count = approvedUsers.length - massKeepIds.filter(id => approvedUsers.some(u => u.id === id)).length;
+                        return `Delete ${count} member${count === 1 ? "" : "s"}?`;
+                      })()}
+                    </AlertDialogTitle>
                     <AlertDialogDescription>
-                      This permanently removes the selected members and all of their submissions. This action cannot be undone.
+                      Only the members you selected to keep will remain. All other approved members and their submissions will be permanently deleted. This cannot be undone.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
