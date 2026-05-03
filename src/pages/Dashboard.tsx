@@ -1222,6 +1222,8 @@ const Dashboard = () => {
       setMassDeleting(false);
     }
   };
+
+  const handleSignOut = async () => {
     await signOut();
     navigate("/login");
   };
