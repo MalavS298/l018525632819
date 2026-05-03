@@ -1179,7 +1179,49 @@ const Dashboard = () => {
     }
   };
 
-  const handleSignOut = async () => {
+  const handleMassDelete = async () => {
+    if (massDeleteIds.length === 0) return;
+    setMassDeleting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Not authenticated");
+        return;
+      }
+      let success = 0;
+      let failed = 0;
+      for (const userId of massDeleteIds) {
+        try {
+          const response = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${session.access_token}`,
+              },
+              body: JSON.stringify({ userId }),
+            }
+          );
+          if (!response.ok) {
+            failed++;
+          } else {
+            success++;
+          }
+        } catch {
+          failed++;
+        }
+      }
+      if (success > 0) toast.success(`Deleted ${success} user${success === 1 ? "" : "s"}`);
+      if (failed > 0) toast.error(`Failed to delete ${failed} user${failed === 1 ? "" : "s"}`);
+      setMassDeleteIds([]);
+      setMassDeleteConfirmOpen(false);
+      fetchUsers();
+      fetchAllSubmissions();
+    } finally {
+      setMassDeleting(false);
+    }
+  };
     await signOut();
     navigate("/login");
   };
