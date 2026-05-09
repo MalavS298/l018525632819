@@ -167,6 +167,20 @@ const Login = () => {
             Continue with Google
           </Button>
 
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full mt-3"
+            onClick={async () => {
+              const result = await lovable.auth.signInWithOAuth("apple", {
+                redirect_uri: `${window.location.origin}/dashboard`,
+              });
+              if (result.error) toast.error(result.error.message || "Apple sign-in failed");
+            }}
+          >
+            Continue with Apple
+          </Button>
+
           <div className="mt-6 text-center">
             <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
