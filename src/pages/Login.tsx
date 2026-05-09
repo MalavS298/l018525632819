@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { lovable } from "@/integrations/lovable";
 
 const Login = () => {
   const [isSignUp, setIsSignUp] = useState(false);
