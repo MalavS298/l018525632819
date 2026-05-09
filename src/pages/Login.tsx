@@ -153,33 +153,42 @@ const Login = () => {
             </div>
           </div>
 
-          <Button
+          <button
             type="button"
-            variant="outline"
-            className="w-full"
             onClick={async () => {
               const result = await lovable.auth.signInWithOAuth("google", {
                 redirect_uri: `${window.location.origin}/dashboard`,
               });
               if (result.error) toast.error(result.error.message || "Google sign-in failed");
             }}
+            className="w-full rounded-xl p-[2px] bg-[conic-gradient(from_0deg,#ea4335,#fbbc05,#34a853,#4285f4,#ea4335)] hover:opacity-90 transition-opacity shadow-sm"
           >
-            Continue with Google
-          </Button>
+            <span className="flex items-center justify-center gap-3 w-full rounded-[10px] bg-card px-4 py-2.5 text-sm font-medium text-foreground">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.76h3.56c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.56-2.76c-.99.66-2.25 1.06-3.72 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.11A6.6 6.6 0 0 1 5.5 12c0-.73.13-1.44.34-2.11V7.05H2.18A11 11 0 0 0 1 12c0 1.78.43 3.46 1.18 4.95l3.66-2.84z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.05l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/>
+              </svg>
+              Continue with Google
+            </span>
+          </button>
 
-          <Button
+          <button
             type="button"
-            variant="outline"
-            className="w-full mt-3"
             onClick={async () => {
               const result = await lovable.auth.signInWithOAuth("apple", {
                 redirect_uri: `${window.location.origin}/dashboard`,
               });
               if (result.error) toast.error(result.error.message || "Apple sign-in failed");
             }}
+            className="mt-3 w-full flex items-center justify-center gap-3 rounded-xl bg-black hover:bg-black/85 text-white px-4 py-2.5 text-sm font-medium transition-colors shadow-sm"
           >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M16.365 1.43c0 1.14-.45 2.21-1.21 3-.83.86-2.18 1.52-3.27 1.43-.13-1.1.43-2.27 1.18-3.04.83-.86 2.27-1.51 3.3-1.39zM20.5 17.27c-.55 1.27-.81 1.84-1.52 2.96-.99 1.55-2.39 3.49-4.13 3.5-1.54.02-1.94-1-4.04-1-2.1.01-2.54 1.02-4.08 1-1.74-.01-3.06-1.76-4.05-3.31-2.77-4.34-3.07-9.43-1.36-12.14 1.22-1.93 3.14-3.06 4.95-3.06 1.84 0 3 1.01 4.52 1.01 1.48 0 2.38-1.01 4.51-1.01 1.61 0 3.32.88 4.54 2.4-3.99 2.19-3.34 7.89.66 9.65z"/>
+            </svg>
             Continue with Apple
-          </Button>
+          </button>
 
           <div className="mt-6 text-center">
             <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
