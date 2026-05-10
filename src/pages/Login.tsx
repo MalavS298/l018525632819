@@ -175,23 +175,6 @@ const Login = () => {
             </span>
           </button>
 
-          <button
-            type="button"
-            onClick={async () => {
-              const { error } = await supabase.auth.signInWithOAuth({
-                provider: "apple",
-                options: { redirectTo: `${window.location.origin}/dashboard` },
-              });
-              if (error) toast.error(error.message || "Apple sign-in failed");
-            }}
-            className="mt-3 w-full flex items-center justify-center gap-3 rounded-xl bg-black hover:bg-black/85 text-white px-4 py-2.5 text-sm font-medium transition-colors shadow-sm"
-          >
-            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M16.365 1.43c0 1.14-.45 2.21-1.21 3-.83.86-2.18 1.52-3.27 1.43-.13-1.1.43-2.27 1.18-3.04.83-.86 2.27-1.51 3.3-1.39zM20.5 17.27c-.55 1.27-.81 1.84-1.52 2.96-.99 1.55-2.39 3.49-4.13 3.5-1.54.02-1.94-1-4.04-1-2.1.01-2.54 1.02-4.08 1-1.74-.01-3.06-1.76-4.05-3.31-2.77-4.34-3.07-9.43-1.36-12.14 1.22-1.93 3.14-3.06 4.95-3.06 1.84 0 3 1.01 4.52 1.01 1.48 0 2.38-1.01 4.51-1.01 1.61 0 3.32.88 4.54 2.4-3.99 2.19-3.34 7.89.66 9.65z"/>
-            </svg>
-            Continue with Apple
-          </button>
-
           <div className="mt-6 text-center">
             <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
