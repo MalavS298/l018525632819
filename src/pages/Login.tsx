@@ -156,10 +156,11 @@ const Login = () => {
           <button
             type="button"
             onClick={async () => {
-              const result = await lovable.auth.signInWithOAuth("google", {
-                redirect_uri: window.location.origin,
+              const { error } = await supabase.auth.signInWithOAuth({
+                provider: "google",
+                options: { redirectTo: `${window.location.origin}/dashboard` },
               });
-              if (result.error) toast.error(result.error.message || "Google sign-in failed");
+              if (error) toast.error(error.message || "Google sign-in failed");
             }}
             className="w-full rounded-xl p-[2px] bg-[conic-gradient(from_0deg,#ea4335,#fbbc05,#34a853,#4285f4,#ea4335)] hover:opacity-90 transition-opacity shadow-sm"
           >
