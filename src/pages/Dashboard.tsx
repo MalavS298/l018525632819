@@ -2178,7 +2178,7 @@ const Dashboard = () => {
           {activeTab === "inbox" && (
             <div className="space-y-6">
               {/* Send Message Form (for regular users only) */}
-              {!isAdmin && (
+              {!canManageContent && (
                 <div className="bg-card rounded-xl p-6 border border-border">
                   <h2 className="text-lg font-semibold text-foreground mb-4">Send Message to Admins</h2>
                   <form onSubmit={handleSendMessage} className="space-y-4">
