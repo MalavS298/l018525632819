@@ -2347,7 +2347,7 @@ const Dashboard = () => {
           {activeTab === "meetings" && (
             <div className="space-y-6">
               {/* Admin: Create Meeting */}
-              {isAdmin && (
+              {canManageContent && (
                 <div className="bg-card rounded-xl p-6 border border-border">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
