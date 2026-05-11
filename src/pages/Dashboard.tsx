@@ -677,7 +677,7 @@ const Dashboard = () => {
       setReplyText("");
       setReplyingTo(null);
       fetchReplies();
-      if (isAdmin) {
+      if (canManageContent) {
         handleMarkMessageRead(messageId);
       }
     } catch (error) {
