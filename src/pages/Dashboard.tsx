@@ -395,6 +395,8 @@ const Dashboard = () => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [allSubmissions, setAllSubmissions] = useState<Submission[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [userRoles, setUserRoles] = useState<Record<string, "admin" | "lead" | "user">>({});
+  const [updatingRoleId, setUpdatingRoleId] = useState<string | null>(null);
   const [totalHours, setTotalHours] = useState(0);
   const [syncHours, setSyncHours] = useState(0);
   const [asyncHours, setAsyncHours] = useState(0);
@@ -594,8 +596,45 @@ const Dashboard = () => {
 
       if (error) throw error;
       setUsers(data || []);
+
+      const { data: rolesData } = await supabase
+        .from("user_roles")
+        .select("user_id, role");
+      const map: Record<string, "admin" | "lead" | "user"> = {};
+      (rolesData || []).forEach((r: any) => {
+        const current = map[r.user_id];
+        // Priority: admin > lead > user
+        if (r.role === "admin") map[r.user_id] = "admin";
+        else if (r.role === "lead" && current !== "admin") map[r.user_id] = "lead";
+        else if (!current) map[r.user_id] = "user";
+      });
+      setUserRoles(map);
     } catch (error) {
       console.error("Error fetching users:", error);
+    }
+  };
+
+  const handleChangeRole = async (userId: string, newRole: "admin" | "lead" | "user") => {
+    setUpdatingRoleId(userId);
+    try {
+      const { error: delErr } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", userId);
+      if (delErr) throw delErr;
+
+      const { error: insErr } = await supabase
+        .from("user_roles")
+        .insert({ user_id: userId, role: newRole as any });
+      if (insErr) throw insErr;
+
+      setUserRoles((prev) => ({ ...prev, [userId]: newRole }));
+      toast.success(`Role updated to ${newRole}`);
+    } catch (error) {
+      console.error("Error updating role:", error);
+      toast.error("Failed to update role");
+    } finally {
+      setUpdatingRoleId(null);
     }
   };
 
@@ -2012,9 +2051,29 @@ const Dashboard = () => {
                             <p className="text-sm text-muted-foreground">{userProfile.email}</p>
                           </div>
                           <div className="flex items-center gap-3">
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-xs text-muted-foreground hidden sm:inline">
                               {new Date(userProfile.created_at).toLocaleDateString()}
                             </span>
+                            {userProfile.id === user?.id ? (
+                              <span className="text-xs px-2 py-1 rounded-md bg-primary/10 text-primary font-medium">
+                                You ({userRoles[userProfile.id] || "user"})
+                              </span>
+                            ) : (
+                              <Select
+                                value={userRoles[userProfile.id] || "user"}
+                                onValueChange={(v) => handleChangeRole(userProfile.id, v as any)}
+                                disabled={updatingRoleId === userProfile.id}
+                              >
+                                <SelectTrigger className="h-8 w-[110px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="user">Member</SelectItem>
+                                  <SelectItem value="lead">Lead</SelectItem>
+                                  <SelectItem value="admin">Admin</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            )}
                             <Button
                               variant="ghost"
                               size="sm"
