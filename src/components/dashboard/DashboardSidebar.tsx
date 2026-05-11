@@ -29,6 +29,7 @@ interface DashboardSidebarProps {
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
   isAdmin: boolean;
+  isLead?: boolean;
   pendingCount?: number;
   unreadMessageCount?: number;
   onOpenSettings?: () => void;
