@@ -2312,7 +2312,7 @@ const Dashboard = () => {
                         )}
 
                         {/* Reply form for admins */}
-                        {isAdmin && replyingTo === message.id && (
+                        {canManageContent && replyingTo === message.id && (
                           <div className="mt-3 border-t border-border pt-3 space-y-2">
                             <Textarea
                               placeholder="Write your reply..."
