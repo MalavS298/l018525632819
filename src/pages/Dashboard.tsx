@@ -596,8 +596,45 @@ const Dashboard = () => {
 
       if (error) throw error;
       setUsers(data || []);
+
+      const { data: rolesData } = await supabase
+        .from("user_roles")
+        .select("user_id, role");
+      const map: Record<string, "admin" | "lead" | "user"> = {};
+      (rolesData || []).forEach((r: any) => {
+        const current = map[r.user_id];
+        // Priority: admin > lead > user
+        if (r.role === "admin") map[r.user_id] = "admin";
+        else if (r.role === "lead" && current !== "admin") map[r.user_id] = "lead";
+        else if (!current) map[r.user_id] = "user";
+      });
+      setUserRoles(map);
     } catch (error) {
       console.error("Error fetching users:", error);
+    }
+  };
+
+  const handleChangeRole = async (userId: string, newRole: "admin" | "lead" | "user") => {
+    setUpdatingRoleId(userId);
+    try {
+      const { error: delErr } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", userId);
+      if (delErr) throw delErr;
+
+      const { error: insErr } = await supabase
+        .from("user_roles")
+        .insert({ user_id: userId, role: newRole as any });
+      if (insErr) throw insErr;
+
+      setUserRoles((prev) => ({ ...prev, [userId]: newRole }));
+      toast.success(`Role updated to ${newRole}`);
+    } catch (error) {
+      console.error("Error updating role:", error);
+      toast.error("Failed to update role");
+    } finally {
+      setUpdatingRoleId(null);
     }
   };
 
