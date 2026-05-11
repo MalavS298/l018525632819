@@ -1275,8 +1275,9 @@ const Dashboard = () => {
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         isAdmin={isAdmin} 
+        isLead={isLead}
         pendingCount={pendingSubmissions.length}
-        unreadMessageCount={isAdmin ? unreadMessages.length : 0}
+        unreadMessageCount={canManageContent ? unreadMessages.length : 0}
         onOpenSettings={handleOpenSettings}
       />
 
