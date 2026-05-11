@@ -622,7 +622,7 @@ const Dashboard = () => {
 
       if (error) throw error;
 
-      if (isAdmin) {
+      if (canManageContent) {
         const { data: profilesData } = await supabase
           .from("profiles")
           .select("id, full_name, email");
