@@ -2238,25 +2238,25 @@ const Dashboard = () => {
                         key={message.id}
                         className={cn(
                           "p-4 rounded-lg border border-border",
-                          !message.read && isAdmin ? "bg-primary/5 border-primary/20" : "bg-muted/50"
+                          !message.read && canManageContent ? "bg-primary/5 border-primary/20" : "bg-muted/50"
                         )}
                       >
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <h3 className="font-medium text-foreground">{message.subject}</h3>
-                              {!message.read && isAdmin && (
+                              {!message.read && canManageContent && (
                                 <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">New</span>
                               )}
                             </div>
-                            {isAdmin && (
+                            {canManageContent && (
                               <p className="text-xs text-muted-foreground mt-1">
                                 From: {message.user_name || message.user_email || "Unknown"}
                               </p>
                             )}
                           </div>
                           <div className="flex items-center gap-1">
-                            {isAdmin && !message.read && (
+                            {canManageContent && !message.read && (
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -2266,7 +2266,7 @@ const Dashboard = () => {
                                 Mark Read
                               </Button>
                             )}
-                            {isAdmin && (
+                            {canManageContent && (
                               <Button
                                 size="sm"
                                 variant="ghost"
