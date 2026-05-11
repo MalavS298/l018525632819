@@ -29,6 +29,7 @@ interface DashboardSidebarProps {
   activeTab: TabType;
   setActiveTab: (tab: TabType) => void;
   isAdmin: boolean;
+  isLead?: boolean;
   pendingCount?: number;
   unreadMessageCount?: number;
   onOpenSettings?: () => void;
@@ -51,10 +52,12 @@ const DashboardSidebar = ({
   activeTab,
   setActiveTab,
   isAdmin,
+  isLead = false,
   pendingCount = 0,
   unreadMessageCount = 0,
   onOpenSettings,
 }: DashboardSidebarProps) => {
+  const canPublishNewsletters = isAdmin || isLead;
   const sections: NavSection[] = [
     {
       id: "service",
@@ -70,7 +73,7 @@ const DashboardSidebar = ({
       label: "Communication",
       items: [
         { id: "inbox", label: "Inbox", icon: Mail, badge: unreadMessageCount },
-        ...(isAdmin
+        ...(canPublishNewsletters
           ? [{ id: "newsletters" as TabType, label: "Newsletters", icon: Newspaper }]
           : []),
       ],

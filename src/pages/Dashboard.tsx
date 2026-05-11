@@ -389,7 +389,8 @@ const UserStatisticsList = ({
 };
 
 const Dashboard = () => {
-  const { user, loading: authLoading, signOut, isAdmin } = useAuth();
+  const { user, loading: authLoading, signOut, isAdmin, isLead } = useAuth();
+  const canManageContent = isAdmin || isLead;
   const navigate = useNavigate();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [allSubmissions, setAllSubmissions] = useState<Submission[]>([]);
@@ -501,11 +502,13 @@ const Dashboard = () => {
       fetchMeetingDetails();
       if (isAdmin) {
         fetchAllSubmissions();
+      }
+      if (canManageContent) {
         fetchUsers();
         fetchNewsletters();
       }
     }
-  }, [user, isAdmin]);
+  }, [user, isAdmin, isLead]);
 
   const fetchUserProfile = async () => {
     try {
@@ -619,7 +622,7 @@ const Dashboard = () => {
 
       if (error) throw error;
 
-      if (isAdmin) {
+      if (canManageContent) {
         const { data: profilesData } = await supabase
           .from("profiles")
           .select("id, full_name, email");
@@ -674,7 +677,7 @@ const Dashboard = () => {
       setReplyText("");
       setReplyingTo(null);
       fetchReplies();
-      if (isAdmin) {
+      if (canManageContent) {
         handleMarkMessageRead(messageId);
       }
     } catch (error) {
@@ -1272,8 +1275,9 @@ const Dashboard = () => {
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         isAdmin={isAdmin} 
+        isLead={isLead}
         pendingCount={pendingSubmissions.length}
-        unreadMessageCount={isAdmin ? unreadMessages.length : 0}
+        unreadMessageCount={canManageContent ? unreadMessages.length : 0}
         onOpenSettings={handleOpenSettings}
       />
 
@@ -2034,7 +2038,7 @@ const Dashboard = () => {
             </div>
           )}
 
-          {activeTab === "newsletters" && isAdmin && (
+          {activeTab === "newsletters" && canManageContent && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Publish Newsletter Form */}
               <div className="bg-card rounded-xl p-6 border border-border">
@@ -2174,7 +2178,7 @@ const Dashboard = () => {
           {activeTab === "inbox" && (
             <div className="space-y-6">
               {/* Send Message Form (for regular users only) */}
-              {!isAdmin && (
+              {!canManageContent && (
                 <div className="bg-card rounded-xl p-6 border border-border">
                   <h2 className="text-lg font-semibold text-foreground mb-4">Send Message to Admins</h2>
                   <form onSubmit={handleSendMessage} className="space-y-4">
@@ -2223,7 +2227,7 @@ const Dashboard = () => {
               {/* Messages list */}
               <div className="bg-card rounded-xl p-6 border border-border">
                 <h2 className="text-lg font-semibold text-foreground mb-4">
-                  {isAdmin ? "All Messages" : "My Sent Messages"}
+                  {canManageContent ? "All Messages" : "My Sent Messages"}
                 </h2>
                 {messages.length === 0 ? (
                   <p className="text-muted-foreground text-center py-8">No messages yet</p>
@@ -2234,25 +2238,25 @@ const Dashboard = () => {
                         key={message.id}
                         className={cn(
                           "p-4 rounded-lg border border-border",
-                          !message.read && isAdmin ? "bg-primary/5 border-primary/20" : "bg-muted/50"
+                          !message.read && canManageContent ? "bg-primary/5 border-primary/20" : "bg-muted/50"
                         )}
                       >
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <h3 className="font-medium text-foreground">{message.subject}</h3>
-                              {!message.read && isAdmin && (
+                              {!message.read && canManageContent && (
                                 <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">New</span>
                               )}
                             </div>
-                            {isAdmin && (
+                            {canManageContent && (
                               <p className="text-xs text-muted-foreground mt-1">
                                 From: {message.user_name || message.user_email || "Unknown"}
                               </p>
                             )}
                           </div>
                           <div className="flex items-center gap-1">
-                            {isAdmin && !message.read && (
+                            {canManageContent && !message.read && (
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -2262,7 +2266,7 @@ const Dashboard = () => {
                                 Mark Read
                               </Button>
                             )}
-                            {isAdmin && (
+                            {canManageContent && (
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -2308,7 +2312,7 @@ const Dashboard = () => {
                         )}
 
                         {/* Reply form for admins */}
-                        {isAdmin && replyingTo === message.id && (
+                        {canManageContent && replyingTo === message.id && (
                           <div className="mt-3 border-t border-border pt-3 space-y-2">
                             <Textarea
                               placeholder="Write your reply..."
@@ -2343,7 +2347,7 @@ const Dashboard = () => {
           {activeTab === "meetings" && (
             <div className="space-y-6">
               {/* Admin: Create Meeting */}
-              {isAdmin && (
+              {canManageContent && (
                 <div className="bg-card rounded-xl p-6 border border-border">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
@@ -2487,7 +2491,7 @@ const Dashboard = () => {
                                 <FileText className="w-4 h-4" />
                                 Details
                               </Button>
-                              {isAdmin && (
+                              {canManageContent && (
                                 <Button
                                   size="sm"
                                   variant="ghost"
@@ -2542,7 +2546,7 @@ const Dashboard = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="w-5 h-5 text-primary" />
-              {isAdmin
+              {canManageContent
                 ? (meetingDetailsMap[detailsDialogMeetingId!]?.id ? "Edit Meeting Details" : "Add Meeting Details")
                 : "Meeting Details"}
             </DialogTitle>
@@ -2553,7 +2557,7 @@ const Dashboard = () => {
               const u = users.find(u => u.id === id);
               return u?.full_name || u?.email || "Unknown";
             });
-            return isAdmin ? (
+            return canManageContent ? (
               <div className="space-y-4 mt-2">
                 <div className="space-y-2">
                   <Label>Meeting Notes / Summary</Label>
