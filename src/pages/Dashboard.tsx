@@ -2491,7 +2491,7 @@ const Dashboard = () => {
                                 <FileText className="w-4 h-4" />
                                 Details
                               </Button>
-                              {isAdmin && (
+                              {canManageContent && (
                                 <Button
                                   size="sm"
                                   variant="ghost"
