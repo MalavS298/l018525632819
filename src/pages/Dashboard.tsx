@@ -2038,7 +2038,7 @@ const Dashboard = () => {
             </div>
           )}
 
-          {activeTab === "newsletters" && isAdmin && (
+          {activeTab === "newsletters" && canManageContent && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Publish Newsletter Form */}
               <div className="bg-card rounded-xl p-6 border border-border">
