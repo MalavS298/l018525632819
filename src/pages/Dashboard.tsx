@@ -502,11 +502,13 @@ const Dashboard = () => {
       fetchMeetingDetails();
       if (isAdmin) {
         fetchAllSubmissions();
+      }
+      if (canManageContent) {
         fetchUsers();
         fetchNewsletters();
       }
     }
-  }, [user, isAdmin]);
+  }, [user, isAdmin, isLead]);
 
   const fetchUserProfile = async () => {
     try {
