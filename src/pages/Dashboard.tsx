@@ -2051,9 +2051,29 @@ const Dashboard = () => {
                             <p className="text-sm text-muted-foreground">{userProfile.email}</p>
                           </div>
                           <div className="flex items-center gap-3">
-                            <span className="text-xs text-muted-foreground">
+                            <span className="text-xs text-muted-foreground hidden sm:inline">
                               {new Date(userProfile.created_at).toLocaleDateString()}
                             </span>
+                            {userProfile.id === user?.id ? (
+                              <span className="text-xs px-2 py-1 rounded-md bg-primary/10 text-primary font-medium">
+                                You ({userRoles[userProfile.id] || "user"})
+                              </span>
+                            ) : (
+                              <Select
+                                value={userRoles[userProfile.id] || "user"}
+                                onValueChange={(v) => handleChangeRole(userProfile.id, v as any)}
+                                disabled={updatingRoleId === userProfile.id}
+                              >
+                                <SelectTrigger className="h-8 w-[110px]">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="user">Member</SelectItem>
+                                  <SelectItem value="lead">Lead</SelectItem>
+                                  <SelectItem value="admin">Admin</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            )}
                             <Button
                               variant="ghost"
                               size="sm"
