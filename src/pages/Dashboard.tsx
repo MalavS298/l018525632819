@@ -389,7 +389,8 @@ const UserStatisticsList = ({
 };
 
 const Dashboard = () => {
-  const { user, loading: authLoading, signOut, isAdmin } = useAuth();
+  const { user, loading: authLoading, signOut, isAdmin, isLead } = useAuth();
+  const canManageContent = isAdmin || isLead;
   const navigate = useNavigate();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [allSubmissions, setAllSubmissions] = useState<Submission[]>([]);
