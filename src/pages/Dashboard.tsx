@@ -2227,7 +2227,7 @@ const Dashboard = () => {
               {/* Messages list */}
               <div className="bg-card rounded-xl p-6 border border-border">
                 <h2 className="text-lg font-semibold text-foreground mb-4">
-                  {isAdmin ? "All Messages" : "My Sent Messages"}
+                  {canManageContent ? "All Messages" : "My Sent Messages"}
                 </h2>
                 {messages.length === 0 ? (
                   <p className="text-muted-foreground text-center py-8">No messages yet</p>
