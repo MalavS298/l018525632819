@@ -42,10 +42,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (session?.user) {
           setTimeout(() => {
-            checkAdminRole(session.user.id);
+            checkRoles(session.user.id);
           }, 0);
         } else {
           setIsAdmin(false);
+          setIsLead(false);
         }
       }
     );
