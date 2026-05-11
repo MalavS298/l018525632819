@@ -2546,7 +2546,7 @@ const Dashboard = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="w-5 h-5 text-primary" />
-              {isAdmin
+              {canManageContent
                 ? (meetingDetailsMap[detailsDialogMeetingId!]?.id ? "Edit Meeting Details" : "Add Meeting Details")
                 : "Meeting Details"}
             </DialogTitle>
@@ -2557,7 +2557,7 @@ const Dashboard = () => {
               const u = users.find(u => u.id === id);
               return u?.full_name || u?.email || "Unknown";
             });
-            return isAdmin ? (
+            return canManageContent ? (
               <div className="space-y-4 mt-2">
                 <div className="space-y-2">
                   <Label>Meeting Notes / Summary</Label>
