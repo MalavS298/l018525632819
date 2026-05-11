@@ -395,6 +395,8 @@ const Dashboard = () => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [allSubmissions, setAllSubmissions] = useState<Submission[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
+  const [userRoles, setUserRoles] = useState<Record<string, "admin" | "lead" | "user">>({});
+  const [updatingRoleId, setUpdatingRoleId] = useState<string | null>(null);
   const [totalHours, setTotalHours] = useState(0);
   const [syncHours, setSyncHours] = useState(0);
   const [asyncHours, setAsyncHours] = useState(0);
